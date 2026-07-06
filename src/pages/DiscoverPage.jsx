@@ -3,18 +3,10 @@ import { collection, getDocs, query, limit } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { useAuth } from '../hooks/useAuth'
 import { colors, Avatar, Badge, StarRow, Btn } from '../components/UI'
+import AreaSearchMap from '../components/AreaSearchMap'
 
 const UNIVERSITIES = ['All', 'FSR', 'ENCG', 'ENSA', 'ISCAE', 'EMI', 'FLSH', 'USMBA', 'UCA', 'UAE']
 const CITIES = ['All', 'Rabat', 'Casablanca', 'Fès', 'Marrakech', 'Agadir', 'Tanger', 'Meknès']
-
-const DEMO_USERS = [
-  { uid: 'u1', displayName: 'Youssef Bennani', username: 'youssef_b', role: 'student',  university: 'FSR',   city: 'Rabat',      avgRating: 4.8, ratingCount: 6,  verified: true  },
-  { uid: 'u2', displayName: 'Salma Idrissi',   username: 'salma_id',  role: 'student',  university: 'ENCG',  city: 'Casablanca', avgRating: 4.5, ratingCount: 3,  verified: true  },
-  { uid: 'u3', displayName: 'Mehdi Alaoui',    username: 'mehdi_a',   role: 'student',  university: 'ENSA',  city: 'Rabat',      avgRating: null, ratingCount: 0, verified: false },
-  { uid: 'u4', displayName: 'Nadia Cherkaoui', username: 'nadia_c',   role: 'student',  university: 'ISCAE', city: 'Casablanca', avgRating: 4.2, ratingCount: 8,  verified: true  },
-  { uid: 'u5', displayName: 'Omar Tazi',       username: 'omar_t',    role: 'landlord', university: null,    city: 'Marrakech',  avgRating: 4.9, ratingCount: 14, verified: true  },
-  { uid: 'u6', displayName: 'Fatima Zahra',    username: 'fatima_z',  role: 'student',  university: 'FLSH',  city: 'Fès',        avgRating: 3.9, ratingCount: 2,  verified: false },
-]
 
 function UserCard({ u, onView, onMessage }) {
   return (
@@ -72,16 +64,22 @@ function UserCard({ u, onView, onMessage }) {
 
 export default function DiscoverPage({ setPage, setSelectedUser }) {
   const { user } = useAuth()
-  const [users, setUsers]   = useState(DEMO_USERS)
+  const [users, setUsers]   = useState([])
   const [uni, setUni]       = useState('All')
   const [city, setCity]     = useState('All')
   const [role, setRole]     = useState('All')
   const [search, setSearch] = useState('')
+  const [radiusKm, setRadiusKm] = useState(5)
+  const [showMap, setShowMap] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     getDocs(query(collection(db, 'users'), limit(60)))
-      .then(snap => { if (!snap.empty) setUsers(snap.docs.map(d => ({ uid: d.id, ...d.data() }))) })
-      .catch(() => {})
+      .then(snap => { 
+        if (!snap.empty) setUsers(snap.docs.map(d => ({ uid: d.id, ...d.data() })))
+        setLoading(false)
+      })
+      .catch(err => { console.error(err); setLoading(false) })
   }, [])
 
   const filtered = users.filter(u => {
@@ -99,35 +97,59 @@ export default function DiscoverPage({ setPage, setSelectedUser }) {
 
   return (
     <div style={{ background: colors.navy, minHeight: '100vh', padding: '1.5rem', color: colors.white }}>
-      <div style={{ maxWidth: 900, margin: '0 auto' }}>
+      <div style={{ maxWidth: 1000, margin: '0 auto' }}>
 
-        <div style={{ marginBottom: 24 }}>
+        <div style={{ marginBottom: 24, position: 'relative', zIndex: 10 }}>
           <h1 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: 26, margin: '0 0 4px' }}>Discover</h1>
           <p style={{ color: colors.muted, fontSize: 14, margin: 0 }}>Find students, roommates, and landlords</p>
         </div>
 
-        <div style={{ position: 'relative', marginBottom: 16 }}>
+        {/* Map Toggle Button */}
+        <div style={{ marginBottom: 16, position: 'relative', zIndex: 10 }}>
+          <Btn 
+            variant={showMap ? 'dark' : 'ghost'} 
+            onClick={() => setShowMap(!showMap)}
+            style={{ fontSize: 12 }}
+          >
+            {showMap ? '✕ Close map' : '🗺️ Search by location'}
+          </Btn>
+        </div>
+
+        {/* Area Search Map */}
+        {showMap && (
+          <div style={{ marginBottom: 24, background: colors.navyLight, padding: '1.25rem', borderRadius: 14, border: '0.5px solid rgba(0,200,150,0.15)', position: 'relative', zIndex: 5 }}>
+            <AreaSearchMap
+              radiusKm={radiusKm}
+              onRadiusChange={setRadiusKm}
+              onSearch={() => {}}
+              resultListings={[]}
+              height={340}
+            />
+          </div>
+        )}
+
+        <div style={{ position: 'relative', marginBottom: 16, zIndex: 10 }}>
           <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: colors.muted }}>🔍</span>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name or @username…"
-            style={{ width: '100%', boxSizing: 'border-box', padding: '12px 14px 12px 40px', border: '0.5px solid rgba(0,200,150,0.2)', borderRadius: 10, fontSize: 14, fontFamily: 'Inter, sans-serif', background: colors.navyLight, color: colors.white, outline: 'none' }}
+            style={{ width: '100%', boxSizing: 'border-box', padding: '12px 14px 12px 40px', border: '0.5px solid rgba(0,200,150,0.2)', borderRadius: 10, fontSize: 14, fontFamily: 'Inter, sans-serif', background: 'rgba(255,255,255,0.05)', color: colors.white, outline: 'none' }}
           />
         </div>
 
-        <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+        <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap', position: 'relative', zIndex: 10 }}>
           {['All', 'student', 'landlord', 'other'].map(r => (
             <button key={r} onClick={() => setRole(r)} style={{
               padding: '5px 14px', borderRadius: 99, fontSize: 12, cursor: 'pointer', textTransform: 'capitalize',
               border: `0.5px solid ${role === r ? colors.mint : 'rgba(0,200,150,0.15)'}`,
               background: role === r ? 'rgba(0,200,150,0.12)' : 'transparent',
-              color: role === r ? colors.mint : colors.muted, fontWeight: role === r ? 600 : 400,
+              color: role === r ? colors.mint : colors.muted, fontWeight: role === r ? 600 : 400, fontFamily: 'Inter, sans-serif',
             }}>{r}</button>
           ))}
         </div>
 
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8, position: 'relative', zIndex: 10 }}>
           {UNIVERSITIES.map(u => (
             <button key={u} onClick={() => setUni(u)} style={{
-              padding: '5px 14px', borderRadius: 99, fontSize: 12, cursor: 'pointer',
+              padding: '5px 14px', borderRadius: 99, fontSize: 12, cursor: 'pointer', fontFamily: 'Inter, sans-serif',
               border: `0.5px solid ${uni === u ? colors.gold : 'rgba(255,215,0,0.15)'}`,
               background: uni === u ? 'rgba(255,215,0,0.1)' : 'transparent',
               color: uni === u ? colors.gold : colors.muted, fontWeight: uni === u ? 600 : 400,
@@ -135,10 +157,10 @@ export default function DiscoverPage({ setPage, setSelectedUser }) {
           ))}
         </div>
 
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 24 }}>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 24, position: 'relative', zIndex: 10 }}>
           {CITIES.map(c => (
             <button key={c} onClick={() => setCity(c)} style={{
-              padding: '5px 14px', borderRadius: 99, fontSize: 12, cursor: 'pointer',
+              padding: '5px 14px', borderRadius: 99, fontSize: 12, cursor: 'pointer', fontFamily: 'Inter, sans-serif',
               border: `0.5px solid ${city === c ? 'rgba(168,196,220,0.6)' : 'rgba(168,196,220,0.15)'}`,
               background: city === c ? 'rgba(168,196,220,0.1)' : 'transparent',
               color: city === c ? colors.mutedLight : colors.muted, fontWeight: city === c ? 600 : 400,
@@ -146,19 +168,27 @@ export default function DiscoverPage({ setPage, setSelectedUser }) {
           ))}
         </div>
 
-        <div style={{ fontSize: 12, color: colors.muted, marginBottom: 14 }}>
-          {filtered.length} {filtered.length === 1 ? 'person' : 'people'} found
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px,1fr))', gap: 14 }}>
-          {filtered.map(u => <UserCard key={u.uid} u={u} onView={onView} onMessage={onMessage} />)}
-          {filtered.length === 0 && (
-            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '4rem', color: colors.muted }}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>👥</div>
-              <p>No users found. Try different filters.</p>
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '2rem', color: colors.muted }}>
+            <div style={{ fontSize: 18 }}>Loading users...</div>
+          </div>
+        ) : (
+          <>
+            <div style={{ fontSize: 12, color: colors.muted, marginBottom: 14 }}>
+              {filtered.length} {filtered.length === 1 ? 'person' : 'people'} found
             </div>
-          )}
-        </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px,1fr))', gap: 14 }}>
+              {filtered.map(u => <UserCard key={u.uid} u={u} onView={onView} onMessage={onMessage} />)}
+              {filtered.length === 0 && (
+                <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '4rem', color: colors.muted }}>
+                  <div style={{ fontSize: 32, marginBottom: 12 }}>👥</div>
+                  <p>No users found. Try different filters.</p>
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
