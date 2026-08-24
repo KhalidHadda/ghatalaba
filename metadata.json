@@ -1,0 +1,8 @@
+{
+  "name": "Gha Talaba",
+  "description": "Housing, roommates, student jobs, and campus life platform born in Morocco for students worldwide.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
