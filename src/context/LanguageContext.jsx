@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect } from 'react'
 import moroccoCities from '../data/cities-morocco-translated.json'
+import { normalizeText } from '../lib/normalize'
 
 const LanguageContext = createContext(null)
 
@@ -1122,7 +1123,7 @@ export const translations = {
   }
 }
 
-export const cityTranslations = (() => {
+export const { cityTranslations, cityTranslationsNormalized } = (() => {
   const base = {
     'All': { en: 'All Cities', fr: 'Toutes les villes', ar: 'جميع المدن' },
     'All cities': { en: 'All Cities', fr: 'Toutes les villes', ar: 'جميع المدن' },
@@ -1144,20 +1145,26 @@ export const cityTranslations = (() => {
     'Remote': { en: 'Remote', fr: 'À distance', ar: 'عن بُعد' },
   }
 
+  const normalized = {}
+
   try {
     if (Array.isArray(moroccoCities)) {
       moroccoCities.forEach(c => {
         const key = c.en
         if (!key) return
-        base[key] = { en: c.en || key, fr: c.fr || c.en || key, ar: c.ar || c.en || key }
+        const entry = { en: c.en || key, fr: c.fr || c.en || key, ar: c.ar || c.en || key }
+        base[key] = entry
+        ;[entry.en, entry.fr, entry.ar].forEach(name => {
+          if (!name) return
+          normalized[normalizeText(name)] = entry
+        })
       })
     }
   } catch (e) {
-    // ignore; fallback to base
     console.error('Failed to merge morocco cities into translations', e)
   }
 
-  return base
+  return { cityTranslations: base, cityTranslationsNormalized: normalized }
 })()
 
 export function LanguageProvider({ children }) {
@@ -1181,10 +1188,15 @@ export function LanguageProvider({ children }) {
 
   const tCity = (cityName) => {
     if (!cityName) return ''
-    const entry = cityTranslations[cityName] || cityTranslations[cityName.trim()]
-    if (entry) {
-      return entry[lang] || entry['en'] || cityName
-    }
+    const trimmed = (cityName || '').toString().trim()
+    // direct lookup (try exact and capitalized form)
+    const direct = cityTranslations[trimmed] || cityTranslations[trimmed.charAt(0).toUpperCase() + trimmed.slice(1)]
+    if (direct) return direct[lang] || direct.en || cityName
+
+    // normalized lookup (diacritics/casing-insensitive)
+    const normalized = cityTranslationsNormalized[normalizeText(trimmed)]
+    if (normalized) return normalized[lang] || normalized.en || cityName
+
     return cityName
   }
 

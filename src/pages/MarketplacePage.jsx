@@ -332,20 +332,6 @@ export default function MarketplacePage({ setPage, setSelectedUser }) {
                 {t ? t('resetBtn') : 'Reset'}
               </button>
             </div>
-                placeholder="Max Budget (MAD)"
-                style={{
-                  width: '100%',
-                  boxSizing: 'border-box',
-                  padding: '9px 12px',
-                  borderRadius: 10,
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  background: 'rgba(15, 23, 42, 0.6)',
-                  color: '#FFFFFF',
-                  fontSize: 13,
-                  outline: 'none',
-                }}
-              />
-            </div>
           </div>
 
           {/* Category Tabs */}

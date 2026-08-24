@@ -1,14 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react'
 import moroccoCities from '../data/cities-morocco-translated.json'
 
-function normalizeText(s = '') {
-  try {
-    return s.toString().normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
-  } catch (e) {
-    // Fallback when Unicode property escapes are not supported
-    return s.toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
-  }
-}
+import { normalizeText } from '../lib/normalize'
 
 export default function CityPicker({ value = '', onChange, placeholder = '', countryCode = 'MA', lang = 'en', id }) {
   const [open, setOpen] = useState(false)
@@ -20,26 +13,33 @@ export default function CityPicker({ value = '', onChange, placeholder = '', cou
 
   const moroccoOptions = useMemo(() => {
     if (!Array.isArray(moroccoCities)) return []
-    return moroccoCities.map(c => ({ en: c.en, fr: c.fr, ar: c.ar }))
-  }, [])
+      return moroccoCities.map(c => ({
+        en: c.en,
+        fr: c.fr,
+        ar: c.ar,
+        normEn: normalizeText(c.en || ''),
+        normFr: normalizeText(c.fr || c.en || ''),
+        normAr: normalizeText(c.ar || c.en || ''),
+      }))
+    }, [])
 
   const intlFallback = useMemo(() => ['Paris','London','New York','Istanbul','Montreal','Dubai'], [])
 
   const allOptions = useMemo(() => {
-    if (countryCode === 'MA') return moroccoOptions.map(o => o[lang] || o.en)
-    return intlFallback
+      if (countryCode === 'MA') return moroccoOptions.map(o => ({ label: o[lang] || o.en, norm: lang === 'fr' ? o.normFr : lang === 'ar' ? o.normAr : o.normEn }))
+      return intlFallback.map(l => ({ label: l, norm: normalizeText(l) }))
   }, [countryCode, moroccoOptions, intlFallback, lang])
 
   const normalizedQuery = useMemo(() => normalizeText(query), [query])
 
   const filtered = useMemo(() => {
-    if (!normalizedQuery) return allOptions.slice(0, 50)
+      if (!normalizedQuery) return allOptions.slice(0, 50).map(o => o.label)
     // simple fuzzy: keep items that include all query tokens
     const tokens = normalizedQuery.split(/\s+/).filter(Boolean)
     return allOptions.filter(opt => {
-      const n = normalizeText(opt)
+        const n = opt.norm
       return tokens.every(t => n.indexOf(t) !== -1)
-    }).slice(0, 50)
+      }).slice(0, 50).map(o => o.label)
   }, [normalizedQuery, allOptions])
 
   useEffect(() => setHighlight(0), [filtered])
