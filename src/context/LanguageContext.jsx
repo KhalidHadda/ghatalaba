@@ -1,6 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect } from 'react'
-import moroccoCities from '../data/cities-morocco-translated.json'
 import { normalizeText } from '../lib/normalize'
 
 const LanguageContext = createContext(null)
@@ -1123,7 +1122,7 @@ export const translations = {
   }
 }
 
-export const { cityTranslations, cityTranslationsNormalized } = (() => {
+export const cityTranslations = (() => {
   const base = {
     'All': { en: 'All Cities', fr: 'Toutes les villes', ar: 'جميع المدن' },
     'All cities': { en: 'All Cities', fr: 'Toutes les villes', ar: 'جميع المدن' },
@@ -1144,28 +1143,33 @@ export const { cityTranslations, cityTranslationsNormalized } = (() => {
     'Kenitra': { en: 'Kenitra', fr: 'Kénitra', ar: 'القنيطرة' },
     'Remote': { en: 'Remote', fr: 'À distance', ar: 'عن بُعد' },
   }
-
-  const normalized = {}
-
-  try {
-    if (Array.isArray(moroccoCities)) {
-      moroccoCities.forEach(c => {
-        const key = c.en
-        if (!key) return
-        const entry = { en: c.en || key, fr: c.fr || c.en || key, ar: c.ar || c.en || key }
-        base[key] = entry
-        ;[entry.en, entry.fr, entry.ar].forEach(name => {
-          if (!name) return
-          normalized[normalizeText(name)] = entry
-        })
-      })
-    }
-  } catch (e) {
-    console.error('Failed to merge morocco cities into translations', e)
-  }
-
-  return { cityTranslations: base, cityTranslationsNormalized: normalized }
+  return base
 })()
+
+export const cityTranslationsNormalized = (() => {
+  const normalized = {}
+  Object.entries(cityTranslations).forEach(([key, entry]) => {
+    ;[key, entry.en, entry.fr, entry.ar].forEach(name => {
+      if (!name) return
+      normalized[normalizeText(name)] = entry
+    })
+  })
+  return normalized
+})()
+
+export function mergeMoroccoCities(list = []) {
+  if (!Array.isArray(list)) return
+  list.forEach(city => {
+    const key = city?.en || city?.fr || city?.ar
+    if (!key) return
+    const entry = { en: city.en || key, fr: city.fr || city.en || key, ar: city.ar || city.en || key }
+    cityTranslations[key] = entry
+    ;[key, entry.en, entry.fr, entry.ar].forEach(name => {
+      if (!name) return
+      cityTranslationsNormalized[normalizeText(name)] = entry
+    })
+  })
+}
 
 export function LanguageProvider({ children }) {
   const [lang, setLangState] = useState(() => {
@@ -1181,6 +1185,22 @@ export function LanguageProvider({ children }) {
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr'
     document.documentElement.lang = lang
   }, [lang])
+
+  useEffect(() => {
+    let mounted = true
+    import('../data/cities-morocco-translated.json')
+      .then((mod) => {
+        if (!mounted) return
+        mergeMoroccoCities(mod.default || mod || [])
+      })
+      .catch((err) => {
+        console.error('Failed to load Morocco city translations', err)
+      })
+
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   const t = (key) => {
     return translations[lang]?.[key] || translations['en']?.[key] || key

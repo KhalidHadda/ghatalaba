@@ -1,27 +1,38 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react'
-import moroccoCities from '../data/cities-morocco-translated.json'
-
 import { normalizeText } from '../lib/normalize'
 
 export default function CityPicker({ value = '', onChange, placeholder = '', countryCode = 'MA', lang = 'en', id }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState(value || '')
   const [highlight, setHighlight] = useState(0)
+  const [moroccoOptions, setMoroccoOptions] = useState([])
   const rootRef = useRef(null)
 
   useEffect(() => setQuery(value || ''), [value])
 
-  const moroccoOptions = useMemo(() => {
-    if (!Array.isArray(moroccoCities)) return []
-      return moroccoCities.map(c => ({
-        en: c.en,
-        fr: c.fr,
-        ar: c.ar,
-        normEn: normalizeText(c.en || ''),
-        normFr: normalizeText(c.fr || c.en || ''),
-        normAr: normalizeText(c.ar || c.en || ''),
-      }))
-    }, [])
+  useEffect(() => {
+    let mounted = true
+    if (countryCode !== 'MA') return () => { mounted = false }
+
+    import('../data/cities-morocco-translated.json')
+      .then(mod => {
+        const list = mod.default || mod || []
+        if (!mounted) return
+        setMoroccoOptions(list.map(c => ({
+          en: c.en,
+          fr: c.fr,
+          ar: c.ar,
+          normEn: normalizeText(c.en || ''),
+          normFr: normalizeText(c.fr || c.en || ''),
+          normAr: normalizeText(c.ar || c.en || ''),
+        })))
+      })
+      .catch(err => {
+        console.error('Failed to load Morocco cities for CityPicker', err)
+      })
+
+    return () => { mounted = false }
+  }, [countryCode])
 
   const intlFallback = useMemo(() => ['Paris','London','New York','Istanbul','Montreal','Dubai'], [])
 
