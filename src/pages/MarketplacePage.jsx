@@ -63,28 +63,36 @@ export default function MarketplacePage({ setPage, setSelectedUser }) {
     return (
       item.sellerId === user.uid ||
       item.sellerId === 'anon' ||
+      item.sellerId === 'guest' ||
+      item.ownerUid === user.uid ||
+      item.userId === user.uid ||
+      !item.sellerId ||
+      profile?.role === 'admin' ||
       (item.sellerName && (item.sellerName === profile?.displayName || item.sellerName === user?.email))
     )
   }
 
   const handleConfirmDelete = async () => {
     if (!itemToDelete) return
+    const idToDelete = itemToDelete.id
     setDeleteLoading(true)
+
+    // Immediate UI update
+    setItems(prev => prev.filter(i => i.id !== idToDelete))
+    if (selectedItem?.id === idToDelete) {
+      setSelectedItem(null)
+    }
+    setItemToDelete(null)
+    setDeleteLoading(false)
+
     try {
-      if (itemToDelete.id && !itemToDelete.id.startsWith('mock_')) {
-        await deleteDoc(doc(db, 'marketplace', itemToDelete.id))
+      if (idToDelete && !idToDelete.startsWith('mock_')) {
+        await deleteDoc(doc(db, 'marketplace', idToDelete))
       }
-      setItems(prev => prev.filter(i => i.id !== itemToDelete.id))
-      if (selectedItem?.id === itemToDelete.id) {
-        setSelectedItem(null)
-      }
-      addToast('Item successfully removed from marketplace', 'success')
-      setItemToDelete(null)
+      addToast('Offer successfully deleted from marketplace', 'success')
     } catch (err) {
       console.error('Failed to delete item:', err)
-      addToast('Could not delete item: ' + err.message, 'error')
-    } finally {
-      setDeleteLoading(false)
+      addToast('Could not delete offer from database: ' + err.message, 'error')
     }
   }
 
@@ -488,24 +496,26 @@ export default function MarketplacePage({ setPage, setSelectedUser }) {
                           top: 10,
                           left: 10,
                           background: 'rgba(239, 68, 68, 0.92)',
-                          border: 'none',
+                          border: '1px solid rgba(255, 255, 255, 0.25)',
                           color: '#FFFFFF',
                           borderRadius: 8,
-                          width: 32,
-                          height: 32,
-                          display: 'flex',
+                          padding: '5px 10px',
+                          fontSize: 11,
+                          fontWeight: 700,
+                          display: 'inline-flex',
                           alignItems: 'center',
-                          justifyContent: 'center',
+                          gap: 5,
                           cursor: 'pointer',
                           boxShadow: '0 2px 10px rgba(0,0,0,0.5)',
                           zIndex: 5,
                           transition: 'transform 0.15s ease',
                         }}
-                        title="Delete listing"
-                        onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
+                        title="Delete marketplace offer"
+                        onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
                         onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={13} />
+                        <span>Delete</span>
                       </button>
                     )}
 

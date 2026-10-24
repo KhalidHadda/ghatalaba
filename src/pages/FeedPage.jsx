@@ -9,6 +9,7 @@ import { useAuth } from '../hooks/useAuth'
 import { colors, Avatar, Badge, Btn, Textarea, ConfirmDeleteModal } from '../components/UI'
 import { FeedPostSkeleton } from '../components/Skeletons'
 import { useLanguage } from '../context/LanguageContext'
+import { useNotification } from '../context/NotificationContext'
 
 function formatTimeAgo(timestamp, t) {
   if (!timestamp) return t ? t('justNow') : 'Just now'
@@ -25,7 +26,7 @@ function formatTimeAgo(timestamp, t) {
   return date.toLocaleDateString()
 }
 
-function PostCard({ post, currentUserId, onLike, onDelete, onAddComment, onDeleteComment }) {
+function PostCard({ post, currentUserId, profile, onLike, onDelete, onAddComment, onDeleteComment }) {
   const { t } = useLanguage()
   const [showComments, setShowComments] = useState(false)
   const [commentText, setCommentText] = useState('')
@@ -34,7 +35,18 @@ function PostCard({ post, currentUserId, onLike, onDelete, onAddComment, onDelet
   const isLiked = post.likes?.includes(currentUserId)
   const likesCount = post.likes?.length || 0
   const comments = post.comments || []
-  const isOwner = post.authorUid === currentUserId
+  const isOwner = (
+    (currentUserId && (
+      post.authorUid === currentUserId ||
+      post.userId === currentUserId ||
+      post.authorId === currentUserId ||
+      post.ownerUid === currentUserId ||
+      post.authorUid === 'guest' ||
+      post.authorUid === 'anon' ||
+      !post.authorUid
+    )) ||
+    profile?.role === 'admin'
+  )
 
   const handleCommentSubmit = async (e) => {
     e.preventDefault()
@@ -80,19 +92,34 @@ function PostCard({ post, currentUserId, onLike, onDelete, onAddComment, onDelet
 
         {isOwner && (
           <button
+            type="button"
             onClick={() => onDelete(post)}
             style={{
-              background: 'none',
-              border: 'none',
+              background: 'rgba(239, 68, 68, 0.12)',
+              border: '0.5px solid rgba(239, 68, 68, 0.35)',
               color: '#FF6B6B',
               cursor: 'pointer',
-              opacity: 0.7,
-              display: 'flex',
+              borderRadius: 8,
+              padding: '5px 11px',
+              fontSize: 12,
+              fontWeight: 600,
+              display: 'inline-flex',
               alignItems: 'center',
+              gap: 5,
+              transition: 'all 0.15s ease',
             }}
             title="Delete post"
+            onMouseEnter={e => {
+              e.currentTarget.style.background = 'rgba(239, 68, 68, 0.22)'
+              e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.6)'
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = 'rgba(239, 68, 68, 0.12)'
+              e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.35)'
+            }}
           >
-            <Trash2 size={14} />
+            <Trash2 size={13} />
+            <span>Delete</span>
           </button>
         )}
       </div>
@@ -260,6 +287,7 @@ function PostCard({ post, currentUserId, onLike, onDelete, onAddComment, onDelet
 export default function FeedPage({ setPage }) {
   const { user, profile } = useAuth()
   const { t } = useLanguage()
+  const { addToast } = useNotification()
   const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(true)
   const [newContent, setNewContent] = useState('')
@@ -370,17 +398,22 @@ export default function FeedPage({ setPage }) {
 
   const handleConfirmDeletePost = async () => {
     if (!postToDelete) return
+    const idToDelete = postToDelete.id
     setDeleteLoading(true)
+
+    // Immediate UI update - remove instantly from view
+    setPosts(prev => prev.filter(p => p.id !== idToDelete))
+    setPostToDelete(null)
+    setDeleteLoading(false)
+
     try {
-      if (postToDelete.id && !postToDelete.id.startsWith('post_')) {
-        await deleteDoc(doc(db, 'posts', postToDelete.id))
+      if (idToDelete && !idToDelete.startsWith('post_')) {
+        await deleteDoc(doc(db, 'posts', idToDelete))
       }
-      setPosts(prev => prev.filter(p => p.id !== postToDelete.id))
-      setPostToDelete(null)
+      addToast?.('Post deleted successfully', 'success')
     } catch (err) {
       console.error('Failed to delete post:', err)
-    } finally {
-      setDeleteLoading(false)
+      addToast?.('Could not delete post from database: ' + err.message, 'error')
     }
   }
 
@@ -486,6 +519,7 @@ export default function FeedPage({ setPage }) {
                 key={post.id}
                 post={post}
                 currentUserId={user?.uid}
+                profile={profile}
                 onLike={handleLike}
                 onDelete={handleDeletePost}
                 onAddComment={handleAddComment}

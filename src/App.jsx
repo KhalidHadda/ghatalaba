@@ -20,6 +20,7 @@ import EventsPage        from './pages/EventsPage'
 import JobsPage          from './pages/JobsPage'
 import MarketplacePage   from './pages/MarketplacePage'
 import RidesharePage     from './pages/RidesharePage'
+import FriendsPage       from './pages/FriendsPage'
 
 const PAGE_META = {
   home: {
@@ -58,6 +59,10 @@ const PAGE_META = {
     title: 'Real-Time Chat & Messages | Gha Talaba',
     description: 'Chat in real-time with landlords, roommates, and university peers worldwide.',
   },
+  friends: {
+    title: 'Friends & Campus Network | Gha Talaba',
+    description: 'Connect with university friends, study partners, and chat in real-time.',
+  },
   profile: {
     title: 'My Profile | Gha Talaba',
     description: 'Manage your verified student badge, housing preferences, and global roommate profile.',
@@ -94,6 +99,7 @@ const ROUTE_PATH_MAP = {
   events: '/events',
   discover: '/discover',
   inbox: '/inbox',
+  friends: '/friends',
   profile: '/profile',
   saved: '/saved',
   myListings: '/my-listings',
@@ -114,6 +120,7 @@ const PATH_TO_PAGE_MAP = {
   'events': 'events',
   'discover': 'discover',
   'inbox': 'inbox',
+  'friends': 'friends',
   'profile': 'profile',
   'saved': 'saved',
   'my-listings': 'myListings',
@@ -204,7 +211,8 @@ function AppContent() {
     listings:      <ListingsPage      setPage={navigate} setSelectedUser={setSelectedUser} />,
     profile:       <ProfilePage       setPage={navigate} targetUser={selectedUser} />,
     contact:       <ContactPage       setPage={navigate} targetUser={selectedUser} />,
-    inbox:         <InboxPage         setPage={navigate} />,
+    inbox:         <InboxPage         setPage={navigate} initialPartner={selectedUser} onClearInitialPartner={() => setSelectedUser(null)} />,
+    friends:       <FriendsPage       setPage={navigate} setSelectedUser={setSelectedUser} />,
     createListing: <MyListingsPage    setPage={navigate} />,
     discover:      <DiscoverPage      setPage={navigate} setSelectedUser={setSelectedUser} />,
     myListings:    <MyListingsPage    setPage={navigate} />,

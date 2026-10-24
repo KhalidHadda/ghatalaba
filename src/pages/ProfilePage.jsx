@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { doc, updateDoc, collection, addDoc, getDocs, query, where, serverTimestamp } from 'firebase/firestore'
-import { Star, Check, Edit2, Mail, GraduationCap } from 'lucide-react'
+import { Star, Check, Edit2, Mail, GraduationCap, UserPlus, UserCheck, MessageSquare } from 'lucide-react'
 import { db } from '../lib/firebase'
 import { useAuth } from '../hooks/useAuth'
+import { useFriends } from '../hooks/useFriends'
 import { colors, Avatar, Badge, StarRow, TraitSlider, Btn, Input, Textarea, FluidAspectMeter, RatingBreakdown, OnlineStatusBadge, isOnlineUser } from '../components/UI'
 
 const TRAITS = [
@@ -108,6 +109,7 @@ function RatingCard({ r }) {
 
 export default function ProfilePage({ setPage, targetUser }) {
   const { user, profile, setProfile } = useAuth()
+  const { isFriend, addFriend, removeFriend } = useFriends()
   const isOwn   = !targetUser || targetUser?.uid === user?.uid
   const subject = isOwn ? profile : targetUser
   const online  = isOnlineUser(subject)
@@ -209,7 +211,48 @@ export default function ProfilePage({ setPage, targetUser }) {
                     )}
                     {!isOwn && (
                       <>
+                        {isFriend(targetUser?.uid) ? (
+                          <Btn 
+                            variant="dark"
+                            style={{ fontSize: 12, padding: '7px 14px', display: 'inline-flex', alignItems: 'center', gap: 6, color: colors.mint, border: '1px solid rgba(0, 200, 150, 0.4)' }}
+                            onClick={() => removeFriend(targetUser?.uid)}
+                            title="Click to remove from friends"
+                          >
+                            <UserCheck size={13} /> Friend ✓
+                          </Btn>
+                        ) : (
+                          <Btn 
+                            style={{ fontSize: 12, padding: '7px 14px', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                            onClick={() => {
+                              if (!user) {
+                                setPage('signup')
+                                return
+                              }
+                              addFriend(targetUser)
+                            }}
+                          >
+                            <UserPlus size={13} /> Add Friend
+                          </Btn>
+                        )}
+
                         <Btn 
+                          style={{
+                            fontSize: 12, 
+                            padding: '7px 14px', 
+                            display: 'inline-flex', 
+                            alignItems: 'center', 
+                            gap: 6,
+                            background: 'linear-gradient(135deg, #00C896 0%, #06B6D4 100%)',
+                            color: '#060D19',
+                            fontWeight: 700,
+                          }} 
+                          onClick={() => setPage('inbox')}
+                        >
+                          <MessageSquare size={13} /> Chat Now
+                        </Btn>
+
+                        <Btn 
+                          variant="ghost"
                           style={{ fontSize: 12, padding: '7px 14px', display: 'inline-flex', alignItems: 'center', gap: 6 }} 
                           onClick={() => {
                             if (!user) {
@@ -219,10 +262,7 @@ export default function ProfilePage({ setPage, targetUser }) {
                             setShowRateForm(r => !r)
                           }}
                         >
-                          <Star size={13} /> Rate as roommate
-                        </Btn>
-                        <Btn variant="ghost" style={{ fontSize: 12, padding: '7px 14px', display: 'inline-flex', alignItems: 'center', gap: 6 }} onClick={() => setPage('contact')}>
-                          <Mail size={13} /> Message
+                          <Star size={13} /> Rate Roommate
                         </Btn>
                       </>
                     )}

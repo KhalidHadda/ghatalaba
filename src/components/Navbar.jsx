@@ -35,9 +35,10 @@ export default function Navbar({ page, setPage }) {
     { id: 'jobs',        label: t('jobs') || 'Jobs & Internships' },
     { id: 'events',      label: t('events') },
     { id: 'discover',    label: t('discover') },
+    { id: 'friends',     label: t('friends') || 'Friends' },
+    { id: 'inbox',       label: t('inbox') },
     { id: 'myListings',  label: t('myListings') },
     { id: 'saved',       label: t('saved') },
-    { id: 'inbox',       label: t('inbox') },
   ] : []
 
   const citiesList = ['All Cities & Countries', ...buildCities(['Paris', 'London', 'New York', 'Istanbul', 'Montreal', 'Dubai']).slice(1)]

@@ -458,7 +458,14 @@ export default function DiscoverPage({ setPage, setSelectedUser }) {
   })
 
   const onView    = (u) => { setSelectedUser(u); setPage('profile') }
-  const onMessage = (u) => { setSelectedUser(u); setPage('contact') }
+  const onMessage = (u) => { 
+    setSelectedUser(u)
+    if (user) {
+      setPage('inbox')
+    } else {
+      setPage('contact')
+    }
+  }
 
   return (
     <div style={{ background: colors.navy, minHeight: '100vh', padding: '1.5rem', color: colors.white }}>
