@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react'
-import { collection, query, getDocs, addDoc, orderBy, serverTimestamp, updateDoc, doc } from 'firebase/firestore'
+import { collection, query, getDocs, addDoc, orderBy, serverTimestamp, updateDoc, doc, deleteDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { useAuth } from '../hooks/useAuth'
 import { useLanguage } from '../context/LanguageContext'
 import { useNotifications } from '../context/NotificationContext'
-import { colors, Btn, Avatar, Modal, Input, Textarea } from '../components/UI'
+import { colors, Btn, Avatar, Modal, Input, Textarea, ConfirmDeleteModal } from '../components/UI'
 import { Skeleton } from '../components/Skeletons'
 import { 
   Car, MapPin, Clock, Users, Plus, 
-  MessageSquare, Navigation, Search
+  MessageSquare, Navigation, Search, Trash2
 } from 'lucide-react'
 
 import { buildCities } from '../lib/cities'
@@ -33,6 +33,35 @@ export default function RidesharePage({ setPage, setSelectedUser }) {
 
   const [showModal, setShowModal] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [rideToDelete, setRideToDelete] = useState(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+
+  const isRideOwner = (ride) => {
+    if (!user || !ride) return false
+    return (
+      ride.organizerId === user.uid ||
+      ride.organizerId === 'guest' ||
+      (ride.organizerName && (ride.organizerName === profile?.displayName || ride.organizerName === user?.email))
+    )
+  }
+
+  const handleConfirmDeleteRide = async () => {
+    if (!rideToDelete) return
+    setDeleteLoading(true)
+    try {
+      if (rideToDelete.id && !rideToDelete.id.startsWith('ride-')) {
+        await deleteDoc(doc(db, 'rideshares', rideToDelete.id))
+      }
+      setRides(prev => prev.filter(r => r.id !== rideToDelete.id))
+      addToast('Ride offer successfully deleted', 'success')
+      setRideToDelete(null)
+    } catch (err) {
+      console.error('Failed to delete ride:', err)
+      addToast('Could not delete ride: ' + err.message, 'error')
+    } finally {
+      setDeleteLoading(false)
+    }
+  }
 
   const [form, setForm] = useState({
     type: 'taxi_group',
@@ -67,9 +96,6 @@ export default function RidesharePage({ setPage, setSelectedUser }) {
       }
     }
     loadData()
-
-    // initialize applied filters to current UI defaults
-    applyRideFilters()
 
     return () => { isMounted = false }
   }, [])
@@ -328,20 +354,45 @@ export default function RidesharePage({ setPage, setSelectedUser }) {
                   {/* Top Badge & Price */}
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                      <span style={{
-                        padding: '4px 10px',
-                        borderRadius: 99,
-                        fontSize: 11,
-                        fontWeight: 800,
-                        background: isTaxiGroup ? 'rgba(245, 158, 11, 0.15)' : 'rgba(6, 182, 212, 0.15)',
-                        color: isTaxiGroup ? '#F59E0B' : colors.cyan,
-                        border: `1px solid ${isTaxiGroup ? 'rgba(245, 158, 11, 0.3)' : 'rgba(6, 182, 212, 0.3)'}`,
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 4,
-                      }}>
-                        {isTaxiGroup ? 'Grand Taxi Co-Group' : 'Private Carpool'}
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        <span style={{
+                          padding: '4px 10px',
+                          borderRadius: 99,
+                          fontSize: 11,
+                          fontWeight: 800,
+                          background: isTaxiGroup ? 'rgba(245, 158, 11, 0.15)' : 'rgba(6, 182, 212, 0.15)',
+                          color: isTaxiGroup ? '#F59E0B' : colors.cyan,
+                          border: `1px solid ${isTaxiGroup ? 'rgba(245, 158, 11, 0.3)' : 'rgba(6, 182, 212, 0.3)'}`,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 4,
+                        }}>
+                          {isTaxiGroup ? 'Grand Taxi Co-Group' : 'Private Carpool'}
+                        </span>
+
+                        {isRideOwner(ride) && (
+                          <button
+                            type="button"
+                            onClick={() => setRideToDelete(ride)}
+                            style={{
+                              background: 'rgba(239, 68, 68, 0.15)',
+                              border: '1px solid rgba(239, 68, 68, 0.35)',
+                              color: '#EF4444',
+                              borderRadius: 8,
+                              padding: '4px 8px',
+                              fontSize: 11,
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 4,
+                            }}
+                            title="Delete this ride offer"
+                          >
+                            <Trash2 size={12} /> Delete
+                          </button>
+                        )}
+                      </div>
 
                       <div style={{ fontSize: 18, fontWeight: 800, color: colors.mint, fontFamily: 'Space Grotesk, sans-serif' }}>
                         {ride.pricePerSeat} {ride.currency} <span style={{ fontSize: 11, fontWeight: 500, color: colors.mutedLight }}>/ seat</span>
@@ -470,6 +521,16 @@ export default function RidesharePage({ setPage, setSelectedUser }) {
           </form>
         </Modal>
       )}
+
+      {/* Confirmation Modal */}
+      <ConfirmDeleteModal
+        isOpen={Boolean(rideToDelete)}
+        onClose={() => setRideToDelete(null)}
+        onConfirm={handleConfirmDeleteRide}
+        title="Delete Ride Offer?"
+        message={`Are you sure you want to cancel and delete the ride from ${rideToDelete?.originCity} to ${rideToDelete?.destCity}?`}
+        loading={deleteLoading}
+      />
     </div>
   )
 }

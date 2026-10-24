@@ -84,15 +84,64 @@ const PAGE_META = {
   },
 }
 
+const ROUTE_PATH_MAP = {
+  home: '/',
+  feed: '/feed',
+  marketplace: '/marketplace',
+  rideshare: '/rideshare',
+  listings: '/listings',
+  jobs: '/jobs',
+  events: '/events',
+  discover: '/discover',
+  inbox: '/inbox',
+  profile: '/profile',
+  saved: '/saved',
+  myListings: '/my-listings',
+  createListing: '/create-listing',
+  login: '/login',
+  signup: '/signup',
+  contact: '/contact',
+}
+
+const PATH_TO_PAGE_MAP = {
+  '': 'home',
+  'home': 'home',
+  'feed': 'feed',
+  'marketplace': 'marketplace',
+  'rideshare': 'rideshare',
+  'listings': 'listings',
+  'jobs': 'jobs',
+  'events': 'events',
+  'discover': 'discover',
+  'inbox': 'inbox',
+  'profile': 'profile',
+  'saved': 'saved',
+  'my-listings': 'myListings',
+  'mylistings': 'myListings',
+  'create-listing': 'createListing',
+  'createlisting': 'createListing',
+  'login': 'login',
+  'signup': 'signup',
+  'contact': 'contact',
+}
+
+function getPageFromLocation() {
+  // Check pathname first (e.g., /feed -> 'feed')
+  const path = window.location.pathname.replace(/^\/+/, '').split('/')[0].toLowerCase()
+  if (PATH_TO_PAGE_MAP[path]) return PATH_TO_PAGE_MAP[path]
+
+  // Backward compatibility fallback for existing hash bookmarks (e.g., /#feed -> 'feed')
+  const hash = window.location.hash.replace('#', '').replace(/^\/+/, '').toLowerCase()
+  if (PATH_TO_PAGE_MAP[hash]) return PATH_TO_PAGE_MAP[hash]
+
+  return 'home'
+}
+
 function AppContent() {
   const { user } = useAuth()
   
-  // Read page from URL hash on initial load
-  const [page, setPage] = useState(() => {
-    const hash = window.location.hash.replace('#', '')
-    if (hash && PAGE_META[hash]) return hash
-    return 'home'
-  })
+  // Read page from URL path on initial load (HTML5 Web History)
+  const [page, setPage] = useState(() => getPageFromLocation())
   
   const [selectedUser, setSelectedUser] = useState(null)
 
@@ -103,7 +152,7 @@ function AppContent() {
       ? 'feed' 
       : page
 
-  // Synchronize hash change and document meta tags
+  // Synchronize clean URL path and document meta tags
   useEffect(() => {
     const meta = PAGE_META[activePage] || PAGE_META.home
     document.title = meta.title
@@ -116,28 +165,30 @@ function AppContent() {
     }
     metaDesc.content = meta.description
 
-    // Update URL hash without breaking page position
-    if (window.location.hash.replace('#', '') !== activePage) {
-      window.history.replaceState(null, '', `#${activePage}`)
+    // Update URL path without hash using HTML5 Web History
+    const targetPath = ROUTE_PATH_MAP[activePage] || '/'
+    if (window.location.pathname !== targetPath || window.location.hash) {
+      window.history.replaceState({ page: activePage }, '', targetPath)
     }
   }, [activePage])
 
-  // Listen to browser Back/Forward navigation (popstate / hashchange)
+  // Listen to browser Back/Forward navigation (popstate)
   useEffect(() => {
-    const handleHashChange = () => {
-      const h = window.location.hash.replace('#', '')
-      if (h && PAGE_META[h]) {
-        setPage(h)
-      }
+    const handlePopState = () => {
+      const p = getPageFromLocation()
+      setPage(p)
     }
-    window.addEventListener('hashchange', handleHashChange)
-    return () => window.removeEventListener('hashchange', handleHashChange)
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
   }, [])
 
   const navigate = (p, opts = {}) => {
     if (opts.user) setSelectedUser(opts.user)
     setPage(p)
-    window.location.hash = p
+    const targetPath = ROUTE_PATH_MAP[p] || '/'
+    if (window.location.pathname !== targetPath) {
+      window.history.pushState({ page: p }, '', targetPath)
+    }
     window.scrollTo(0, 0)
   }
 

@@ -6,7 +6,7 @@ import {
 import { MessageSquare, Heart, Trash2 } from 'lucide-react'
 import { db } from '../lib/firebase'
 import { useAuth } from '../hooks/useAuth'
-import { colors, Avatar, Badge, Btn, Textarea } from '../components/UI'
+import { colors, Avatar, Badge, Btn, Textarea, ConfirmDeleteModal } from '../components/UI'
 import { FeedPostSkeleton } from '../components/Skeletons'
 import { useLanguage } from '../context/LanguageContext'
 
@@ -25,7 +25,7 @@ function formatTimeAgo(timestamp, t) {
   return date.toLocaleDateString()
 }
 
-function PostCard({ post, currentUserId, onLike, onDelete, onAddComment }) {
+function PostCard({ post, currentUserId, onLike, onDelete, onAddComment, onDeleteComment }) {
   const { t } = useLanguage()
   const [showComments, setShowComments] = useState(false)
   const [commentText, setCommentText] = useState('')
@@ -80,7 +80,7 @@ function PostCard({ post, currentUserId, onLike, onDelete, onAddComment }) {
 
         {isOwner && (
           <button
-            onClick={() => onDelete(post.id)}
+            onClick={() => onDelete(post)}
             style={{
               background: 'none',
               border: 'none',
@@ -185,7 +185,28 @@ function PostCard({ post, currentUserId, onLike, onDelete, onAddComment }) {
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: 12, fontWeight: 700, color: colors.mint }}>{c.authorName}</span>
-                    <span style={{ fontSize: 10, color: colors.muted }}>{formatTimeAgo(c.createdAt, t)}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ fontSize: 10, color: colors.muted }}>{formatTimeAgo(c.createdAt, t)}</span>
+                      {currentUserId && (c.authorUid === currentUserId || isOwner) && (
+                        <button
+                          type="button"
+                          onClick={() => onDeleteComment?.(post.id, idx)}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#FF6B6B',
+                            cursor: 'pointer',
+                            padding: 2,
+                            opacity: 0.7,
+                            display: 'flex',
+                            alignItems: 'center',
+                          }}
+                          title="Delete comment"
+                        >
+                          <Trash2 size={11} />
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <p style={{ fontSize: 13, color: colors.white, margin: '2px 0 0', lineHeight: 1.4 }}>{c.text}</p>
                 </div>
@@ -340,13 +361,41 @@ export default function FeedPage({ setPage }) {
     }
   }
 
-  const handleDeletePost = async (postId) => {
-    if (!window.confirm('Are you sure you want to delete this post?')) return
-    setPosts(prev => prev.filter(p => p.id !== postId))
+  const [postToDelete, setPostToDelete] = useState(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+
+  const handleDeletePost = (post) => {
+    setPostToDelete(post)
+  }
+
+  const handleConfirmDeletePost = async () => {
+    if (!postToDelete) return
+    setDeleteLoading(true)
     try {
-      await deleteDoc(doc(db, 'posts', postId))
+      if (postToDelete.id && !postToDelete.id.startsWith('post_')) {
+        await deleteDoc(doc(db, 'posts', postToDelete.id))
+      }
+      setPosts(prev => prev.filter(p => p.id !== postToDelete.id))
+      setPostToDelete(null)
     } catch (err) {
       console.error('Failed to delete post:', err)
+    } finally {
+      setDeleteLoading(false)
+    }
+  }
+
+  const handleDeleteComment = async (postId, commentIndex) => {
+    const post = posts.find(p => p.id === postId)
+    if (!post) return
+    const updatedComments = (post.comments || []).filter((_, idx) => idx !== commentIndex)
+    setPosts(prev => prev.map(p => p.id === postId ? { ...p, comments: updatedComments } : p))
+    try {
+      const postRef = doc(db, 'posts', postId)
+      await updateDoc(postRef, {
+        comments: updatedComments
+      })
+    } catch (err) {
+      console.error('Failed to delete comment:', err)
     }
   }
 
@@ -440,11 +489,22 @@ export default function FeedPage({ setPage }) {
                 onLike={handleLike}
                 onDelete={handleDeletePost}
                 onAddComment={handleAddComment}
+                onDeleteComment={handleDeleteComment}
               />
             ))}
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmDeleteModal
+        isOpen={Boolean(postToDelete)}
+        onClose={() => setPostToDelete(null)}
+        onConfirm={handleConfirmDeletePost}
+        title="Delete Campus Post?"
+        message="Are you sure you want to delete this post? It will be permanently removed from the Campus Feed."
+        loading={deleteLoading}
+      />
     </div>
   )
 }

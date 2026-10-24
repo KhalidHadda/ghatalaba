@@ -3,7 +3,7 @@ import { collection, getDocs, query, where, deleteDoc, doc, updateDoc, addDoc, s
 import { MapPin, Plus, Building2, X, Check } from 'lucide-react'
 import { db } from '../lib/firebase'
 import { useAuth } from '../hooks/useAuth'
-import { colors, Badge, Btn, Input, Textarea } from '../components/UI'
+import { colors, Badge, Btn, Input, Textarea, ConfirmDeleteModal } from '../components/UI'
 import { useLanguage } from '../context/LanguageContext'
 
 import { buildCities } from '../lib/cities'
@@ -93,16 +93,31 @@ export default function MyListingsPage({ setPage }) {
     return () => { isMounted = false }
   }, [user])
 
+  const [itemToDelete, setItemToDelete] = useState(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+
   const onToggleActive = async (l) => {
     const newActive = l.active === false ? true : false
     await updateDoc(doc(db, 'listings', l.id), { active: newActive })
     setListings(ls => ls.map(x => x.id === l.id ? { ...x, active: newActive } : x))
   }
 
-  const onDelete = async (l) => {
-    if (!window.confirm(`Delete "${l.title}"? This can't be undone.`)) return
-    await deleteDoc(doc(db, 'listings', l.id))
-    setListings(ls => ls.filter(x => x.id !== l.id))
+  const onDelete = (l) => {
+    setItemToDelete(l)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!itemToDelete) return
+    setDeleteLoading(true)
+    try {
+      await deleteDoc(doc(db, 'listings', itemToDelete.id))
+      setListings(ls => ls.filter(x => x.id !== itemToDelete.id))
+      setItemToDelete(null)
+    } catch (err) {
+      console.error('Failed to delete listing:', err)
+    } finally {
+      setDeleteLoading(false)
+    }
   }
 
   const handleCreateListing = async (e) => {
@@ -282,6 +297,16 @@ export default function MyListingsPage({ setPage }) {
           </div>
         </div>
       )}
+
+      {/* Confirmation Modal */}
+      <ConfirmDeleteModal
+        isOpen={Boolean(itemToDelete)}
+        onClose={() => setItemToDelete(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Housing Listing?"
+        message={`Are you sure you want to delete "${itemToDelete?.title}"? This cannot be undone.`}
+        loading={deleteLoading}
+      />
     </div>
   )
 }

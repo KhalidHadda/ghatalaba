@@ -6,7 +6,7 @@ import {
 import { Calendar, MapPin, Clock, User, Users, Trash2, X, Plus } from 'lucide-react'
 import { db } from '../lib/firebase'
 import { useAuth } from '../hooks/useAuth'
-import { colors, Avatar, Badge, Btn, Input, Textarea } from '../components/UI'
+import { colors, Avatar, Badge, Btn, Input, Textarea, ConfirmDeleteModal } from '../components/UI'
 import { Skeleton } from '../components/Skeletons'
 import { useLanguage } from '../context/LanguageContext'
 
@@ -125,13 +125,26 @@ export default function EventsPage({ setPage }) {
     }
   }
 
-  const handleDeleteEvent = async (eventId) => {
-    if (!window.confirm('Delete this event?')) return
-    setEvents(prev => prev.filter(e => e.id !== eventId))
+  const [eventToDelete, setEventToDelete] = useState(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+
+  const handleDeleteEvent = (event) => {
+    setEventToDelete(event)
+  }
+
+  const handleConfirmDeleteEvent = async () => {
+    if (!eventToDelete) return
+    setDeleteLoading(true)
     try {
-      await deleteDoc(doc(db, 'events', eventId))
+      if (eventToDelete.id && !eventToDelete.id.startsWith('event_')) {
+        await deleteDoc(doc(db, 'events', eventToDelete.id))
+      }
+      setEvents(prev => prev.filter(e => e.id !== eventToDelete.id))
+      setEventToDelete(null)
     } catch (err) {
       console.error('Failed to delete event:', err)
+    } finally {
+      setDeleteLoading(false)
     }
   }
 
@@ -423,7 +436,8 @@ export default function EventsPage({ setPage }) {
 
                       {isOwner && (
                         <button
-                          onClick={() => handleDeleteEvent(event.id)}
+                          type="button"
+                          onClick={() => handleDeleteEvent(event)}
                           style={{ background: 'none', border: 'none', color: '#FF6B6B', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                           title="Delete Event"
                         >
@@ -509,6 +523,16 @@ export default function EventsPage({ setPage }) {
           </div>
         )}
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmDeleteModal
+        isOpen={Boolean(eventToDelete)}
+        onClose={() => setEventToDelete(null)}
+        onConfirm={handleConfirmDeleteEvent}
+        title="Delete Event?"
+        message={`Are you sure you want to cancel and delete "${eventToDelete?.title}"?`}
+        loading={deleteLoading}
+      />
     </div>
   )
 }

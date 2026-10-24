@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
-import { collection, query, orderBy, limit, getDocs, addDoc, serverTimestamp } from 'firebase/firestore'
-import { Briefcase, MapPin, Clock, DollarSign, PlusCircle, Search, Filter, CheckCircle2, Send, Building2, Calendar, Sparkles, Bookmark, Phone, Mail } from 'lucide-react'
+import { collection, query, orderBy, limit, getDocs, addDoc, serverTimestamp, doc, deleteDoc } from 'firebase/firestore'
+import { Briefcase, MapPin, Clock, DollarSign, PlusCircle, Search, Filter, CheckCircle2, Send, Building2, Calendar, Sparkles, Bookmark, Phone, Mail, Trash2 } from 'lucide-react'
 import { db } from '../lib/firebase'
 import { useAuth } from '../hooks/useAuth'
 import { useLanguage } from '../context/LanguageContext'
-import { colors, Avatar, Badge, Btn, Input, Textarea } from '../components/UI'
+import { colors, Avatar, Badge, Btn, Input, Textarea, ConfirmDeleteModal } from '../components/UI'
 import { Skeleton } from '../components/Skeletons'
 import CityPicker from '../components/CityPicker'
 import CountrySelect from '../components/CountrySelect'
@@ -22,6 +22,33 @@ export default function JobsPage({ setPage }) {
   const [selectedType, setSelectedType] = useState('All')
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [savedJobIds, setSavedJobIds] = useState([])
+  const [jobToDelete, setJobToDelete] = useState(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+
+  const isJobOwner = (job) => {
+    if (!user || !job) return false
+    return (
+      job.ownerUid === user.uid ||
+      job.ownerUid === 'guest' ||
+      (job.ownerName && (job.ownerName === profile?.displayName || job.ownerName === user?.email))
+    )
+  }
+
+  const handleConfirmDeleteJob = async () => {
+    if (!jobToDelete) return
+    setDeleteLoading(true)
+    try {
+      if (jobToDelete.id && !jobToDelete.id.startsWith('mock_')) {
+        await deleteDoc(doc(db, 'jobs', jobToDelete.id))
+      }
+      setJobs(prev => prev.filter(j => j.id !== jobToDelete.id))
+      setJobToDelete(null)
+    } catch (err) {
+      console.error('Failed to delete job:', err)
+    } finally {
+      setDeleteLoading(false)
+    }
+  }
 
   // Modal State
   const [showModal, setShowModal] = useState(false)
@@ -322,19 +349,43 @@ export default function JobsPage({ setPage }) {
                       <Badge variant="mint">{job.category}</Badge>
                       <Badge variant="cyan">{job.jobType}</Badge>
                     </div>
-                    <button
-                      onClick={() => toggleSaveJob(job.id)}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: isSaved ? colors.cyan : colors.muted,
-                        cursor: 'pointer',
-                        padding: 4,
-                      }}
-                      title={isSaved ? 'Remove Bookmark' : 'Save Job'}
-                    >
-                      <Bookmark size={18} fill={isSaved ? colors.cyan : 'none'} />
-                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      {isJobOwner(job) && (
+                        <button
+                          type="button"
+                          onClick={() => setJobToDelete(job)}
+                          style={{
+                            background: 'rgba(239, 68, 68, 0.15)',
+                            border: '1px solid rgba(239, 68, 68, 0.35)',
+                            color: '#EF4444',
+                            borderRadius: 8,
+                            padding: '3px 8px',
+                            fontSize: 11,
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4,
+                          }}
+                          title="Delete this job posting"
+                        >
+                          <Trash2 size={12} /> Delete
+                        </button>
+                      )}
+                      <button
+                        onClick={() => toggleSaveJob(job.id)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: isSaved ? colors.cyan : colors.muted,
+                          cursor: 'pointer',
+                          padding: 4,
+                        }}
+                        title={isSaved ? 'Remove Bookmark' : 'Save Job'}
+                      >
+                        <Bookmark size={18} fill={isSaved ? colors.cyan : 'none'} />
+                      </button>
+                    </div>
                   </div>
 
                   {/* Title & Company */}
@@ -666,6 +717,16 @@ export default function JobsPage({ setPage }) {
           </div>
         </div>
       )}
+
+      {/* Confirmation Modal */}
+      <ConfirmDeleteModal
+        isOpen={Boolean(jobToDelete)}
+        onClose={() => setJobToDelete(null)}
+        onConfirm={handleConfirmDeleteJob}
+        title="Delete Job Posting?"
+        message={`Are you sure you want to delete the job posting "${jobToDelete?.title}" at ${jobToDelete?.company}?`}
+        loading={deleteLoading}
+      />
     </div>
   )
 }

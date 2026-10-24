@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react'
-import { collection, getDocs, query, orderBy, limit, addDoc, where } from 'firebase/firestore'
-import { Bookmark, MapPin, Mail, MessageCircle, Search, Building2, Calendar, User, ArrowLeft, Check, Plus } from 'lucide-react'
+import { collection, getDocs, query, orderBy, limit, addDoc, where, doc, deleteDoc } from 'firebase/firestore'
+import { Bookmark, MapPin, Mail, MessageCircle, Search, Building2, Calendar, User, ArrowLeft, Check, Plus, Trash2 } from 'lucide-react'
 import { db } from '../lib/firebase'
 import { useAuth } from '../hooks/useAuth'
 import { useLanguage } from '../context/LanguageContext'
-import { colors, Badge, StarRow, Textarea, Btn, RatingBreakdown, FluidAspectMeter } from '../components/UI'
+import { colors, Badge, StarRow, Textarea, Btn, RatingBreakdown, FluidAspectMeter, ConfirmDeleteModal } from '../components/UI'
 import { ListingCardSkeleton } from '../components/Skeletons'
 import { isSaved, toggleSaved } from '../lib/saved'
 
-import { buildCities } from '../lib/cities'
 import CityPicker from '../components/CityPicker'
 import CountrySelect from '../components/CountrySelect'
 import { normalizeText } from '../lib/normalize'
@@ -35,7 +34,7 @@ function BookmarkButton({ listingId, uid, size = 16 }) {
   )
 }
 
-function ListingCard({ l, onClick, uid }) {
+function ListingCard({ l, onClick, uid, onDelete }) {
   const { tCity } = useLanguage()
   const isGuest = !uid
   const handleMove = (e) => {
@@ -71,7 +70,31 @@ function ListingCard({ l, onClick, uid }) {
         borderBottom: '0.5px solid rgba(0,200,150,0.1)', position: 'relative',
       }}>
         <Building2 size={36} />
-        <div style={{ position: 'absolute', top: 8, right: 8 }}>
+        <div style={{ position: 'absolute', top: 8, right: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+          {uid && (l.ownerUid === uid || l.ownerUid === 'guest') && (
+            <button
+              type="button"
+              onClick={e => {
+                e.stopPropagation()
+                onDelete?.(l)
+              }}
+              style={{
+                background: 'rgba(239, 68, 68, 0.2)',
+                border: '0.5px solid rgba(239, 68, 68, 0.4)',
+                borderRadius: 8,
+                width: 32,
+                height: 32,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: '#EF4444',
+              }}
+              title="Delete Listing"
+            >
+              <Trash2 size={15} />
+            </button>
+          )}
           <BookmarkButton listingId={l.id} uid={uid} />
         </div>
       </div>
@@ -93,7 +116,7 @@ function ListingCard({ l, onClick, uid }) {
   )
 }
 
-function ListingDetail({ l, onBack, setPage, setSelectedUser, uid }) {
+function ListingDetail({ l, onBack, setPage, setSelectedUser, uid, onDelete }) {
   const { t, tCity } = useLanguage()
   const [revealed, setRevealed] = useState(false)
 
@@ -112,7 +135,31 @@ function ListingDetail({ l, onBack, setPage, setSelectedUser, uid }) {
         }}>
           <ArrowLeft size={16} /> {t('back')}
         </button>
-        <BookmarkButton listingId={l.id} uid={uid} size={20} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {uid && (l.ownerUid === uid || l.ownerUid === 'guest') && (
+            <button
+              type="button"
+              onClick={() => onDelete?.(l)}
+              style={{
+                background: 'rgba(239, 68, 68, 0.15)',
+                border: '0.5px solid rgba(239, 68, 68, 0.4)',
+                borderRadius: 8,
+                padding: '6px 12px',
+                color: '#EF4444',
+                fontSize: 12,
+                fontWeight: 700,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                cursor: 'pointer',
+              }}
+              title="Delete Listing"
+            >
+              <Trash2 size={14} /> Delete
+            </button>
+          )}
+          <BookmarkButton listingId={l.id} uid={uid} size={20} />
+        </div>
       </div>
 
       <div style={{
@@ -254,6 +301,15 @@ function ListingReviewSection({ listingId, uid, setPage }) {
     }
   }
 
+  const handleDeleteReview = async (reviewId) => {
+    try {
+      await deleteDoc(doc(db, 'listing_reviews', reviewId))
+      setReviews(prev => prev.filter(r => r.id !== reviewId))
+    } catch (err) {
+      console.error('Failed to delete review:', err)
+    }
+  }
+
   const avgScore = reviews.length ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : null
 
   return (
@@ -319,9 +375,30 @@ function ListingReviewSection({ listingId, uid, setPage }) {
             <div key={r.id} style={{ background: 'rgba(255,255,255,0.03)', padding: '10px 14px', borderRadius: 10, border: '0.5px solid rgba(0,200,150,0.1)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                 <StarRow value={r.rating} size={12} />
-                <span style={{ fontSize: 10, color: colors.muted }}>
-                  {r.createdAt ? new Date(r.createdAt).toLocaleDateString() : 'Recently'}
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 10, color: colors.muted }}>
+                    {r.createdAt ? new Date(r.createdAt).toLocaleDateString() : 'Recently'}
+                  </span>
+                  {uid && r.uid === uid && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteReview(r.id)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#EF4444',
+                        cursor: 'pointer',
+                        padding: 2,
+                        opacity: 0.8,
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                      title="Delete review"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  )}
+                </div>
               </div>
               {r.comment && <p style={{ fontSize: 12, color: colors.mutedLight, margin: 0, lineHeight: 1.5 }}>{r.comment}</p>}
             </div>
@@ -334,7 +411,7 @@ function ListingReviewSection({ listingId, uid, setPage }) {
 
 export default function ListingsPage({ setPage, setSelectedUser }) {
   const { user } = useAuth()
-  const { t, tCity } = useLanguage()
+  const { t } = useLanguage()
   const [listings, setListings] = useState([])
   const [loading, setLoading]   = useState(true)
   const [city, setCity]         = useState('All')
@@ -342,6 +419,27 @@ export default function ListingsPage({ setPage, setSelectedUser }) {
   const [type, setType]         = useState('All')
   const [search, setSearch]     = useState('')
   const [selected, setSelected] = useState(null)
+  const [listingToDelete, setListingToDelete] = useState(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+
+  const handleConfirmDeleteListing = async () => {
+    if (!listingToDelete) return
+    setDeleteLoading(true)
+    try {
+      if (listingToDelete.id && !listingToDelete.id.startsWith('mock_')) {
+        await deleteDoc(doc(db, 'listings', listingToDelete.id))
+      }
+      setListings(prev => prev.filter(x => x.id !== listingToDelete.id))
+      if (selected?.id === listingToDelete.id) {
+        setSelected(null)
+      }
+      setListingToDelete(null)
+    } catch (err) {
+      console.error('Failed to delete listing:', err)
+    } finally {
+      setDeleteLoading(false)
+    }
+  }
 
   useEffect(() => {
     getDocs(query(collection(db, 'listings'), orderBy('createdAt', 'desc'), limit(40)))
@@ -367,7 +465,15 @@ export default function ListingsPage({ setPage, setSelectedUser }) {
 
   if (selected) return (
     <div style={{ background: colors.navy, minHeight: '100vh', color: colors.white }}>
-      <ListingDetail l={selected} onBack={() => setSelected(null)} setPage={setPage} setSelectedUser={setSelectedUser} uid={user?.uid} />
+      <ListingDetail l={selected} onBack={() => setSelected(null)} setPage={setPage} setSelectedUser={setSelectedUser} uid={user?.uid} onDelete={setListingToDelete} />
+      <ConfirmDeleteModal
+        isOpen={Boolean(listingToDelete)}
+        onClose={() => setListingToDelete(null)}
+        onConfirm={handleConfirmDeleteListing}
+        title="Delete Housing Listing?"
+        message={`Are you sure you want to permanently delete "${listingToDelete?.title}"?`}
+        loading={deleteLoading}
+      />
     </div>
   )
 
@@ -426,7 +532,7 @@ export default function ListingsPage({ setPage, setSelectedUser }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px,1fr))', gap: 14 }}>
           {loading ? (
             Array.from({ length: 6 }).map((_, i) => <ListingCardSkeleton key={i} />)
-          ) : filtered.map(l => <ListingCard key={l.id} l={l} onClick={setSelected} uid={user?.uid} />)}
+          ) : filtered.map(l => <ListingCard key={l.id} l={l} onClick={setSelected} uid={user?.uid} onDelete={setListingToDelete} />)}
           {!loading && filtered.length === 0 && (
             <div style={{
               gridColumn: '1/-1',
@@ -445,6 +551,15 @@ export default function ListingsPage({ setPage, setSelectedUser }) {
           )}
         </div>
       </div>
+
+      <ConfirmDeleteModal
+        isOpen={Boolean(listingToDelete)}
+        onClose={() => setListingToDelete(null)}
+        onConfirm={handleConfirmDeleteListing}
+        title="Delete Housing Listing?"
+        message={`Are you sure you want to permanently delete "${listingToDelete?.title}"?`}
+        loading={deleteLoading}
+      />
     </div>
   )
 }

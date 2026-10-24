@@ -2,7 +2,7 @@
 /* eslint-disable no-unused-vars */
 import { useState } from 'react'
 import { motion } from 'motion/react'
-import { Eye, EyeOff, Star, X } from 'lucide-react'
+import { Eye, EyeOff, Star, X, Trash2 } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
 
 export const colors = {
@@ -763,3 +763,138 @@ export function Modal({ isOpen, onClose, title, children }) {
     </div>
   )
 }
+
+export function ConfirmDeleteModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  title = 'Delete Item?',
+  message = 'Are you sure you want to delete this? This action cannot be undone.',
+  confirmText = 'Delete',
+  loading = false,
+}) {
+  if (!isOpen) return null
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 10000,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 16,
+        background: 'rgba(6, 13, 25, 0.85)',
+        backdropFilter: 'blur(12px)',
+      }}
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.94, y: 8 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.94 }}
+        style={{
+          width: '100%',
+          maxWidth: 440,
+          background: '#0F172A',
+          border: '1px solid rgba(239, 68, 68, 0.35)',
+          borderRadius: 18,
+          padding: '24px',
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.7)',
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+          <div
+            style={{
+              width: 42,
+              height: 42,
+              borderRadius: 12,
+              background: 'rgba(239, 68, 68, 0.15)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#EF4444',
+              flexShrink: 0,
+            }}
+          >
+            <Trash2 size={20} />
+          </div>
+          <h3
+            style={{
+              margin: 0,
+              color: '#FFFFFF',
+              fontSize: 18,
+              fontWeight: 700,
+              fontFamily: 'Space Grotesk, sans-serif',
+            }}
+          >
+            {title}
+          </h3>
+        </div>
+
+        <p
+          style={{
+            margin: '0 0 22px 0',
+            color: colors.mutedLight,
+            fontSize: 14,
+            lineHeight: 1.5,
+          }}
+        >
+          {message}
+        </p>
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={loading}
+            style={{
+              padding: '9px 18px',
+              borderRadius: 10,
+              background: 'rgba(255, 255, 255, 0.06)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              color: '#FFFFFF',
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontFamily: 'Plus Jakarta Sans, sans-serif',
+              transition: 'background 0.15s ease',
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={loading}
+            style={{
+              padding: '9px 20px',
+              borderRadius: 10,
+              background: '#EF4444',
+              border: 'none',
+              color: '#FFFFFF',
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              opacity: loading ? 0.6 : 1,
+              fontFamily: 'Plus Jakarta Sans, sans-serif',
+              boxShadow: '0 4px 14px rgba(239, 68, 68, 0.35)',
+            }}
+          >
+            {loading ? 'Deleting...' : confirmText}
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+

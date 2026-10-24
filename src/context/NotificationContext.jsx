@@ -35,7 +35,9 @@ export function NotificationProvider({ children }) {
     try {
       const raw = localStorage.getItem('gt_alert_prefs')
       if (raw) return JSON.parse(raw)
-    } catch (e) {}
+    } catch {
+      /* ignore */
+    }
     return { housing: true, marketplace: true, rides: true }
   })
 
@@ -57,7 +59,11 @@ export function NotificationProvider({ children }) {
   const toggleAlertPref = (section) => {
     setAlertPrefs(prev => {
       const next = { ...prev, [section]: !prev[section] }
-      try { localStorage.setItem('gt_alert_prefs', JSON.stringify(next)) } catch (e) {}
+      try {
+        localStorage.setItem('gt_alert_prefs', JSON.stringify(next))
+      } catch {
+        /* ignore */
+      }
       return next
     })
   }

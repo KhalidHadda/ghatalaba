@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react'
-import { collection, query, getDocs, addDoc, orderBy, serverTimestamp } from 'firebase/firestore'
+import { collection, query, getDocs, addDoc, orderBy, serverTimestamp, doc, deleteDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { useAuth } from '../hooks/useAuth'
 import { useLanguage } from '../context/LanguageContext'
 import { useNotifications } from '../context/NotificationContext'
-import { colors, Btn, Avatar, Modal, Input, Textarea } from '../components/UI'
+import { colors, Btn, Avatar, Modal, Input, Textarea, ConfirmDeleteModal } from '../components/UI'
 import { Skeleton } from '../components/Skeletons'
 import { 
   ShoppingBag, Search, Plus, Tag, MapPin, 
-  MessageSquare, Smartphone, BookOpen, Armchair, Coffee, Shirt, Bike, Gamepad2, Package
+  MessageSquare, Smartphone, BookOpen, Armchair, Coffee, Shirt, Bike, Gamepad2, Package, Trash2
 } from 'lucide-react'
 
 const CATEGORIES = [
@@ -55,6 +55,38 @@ export default function MarketplacePage({ setPage, setSelectedUser }) {
   const [selectedItem, setSelectedItem] = useState(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [itemToDelete, setItemToDelete] = useState(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+
+  const isItemOwner = (item) => {
+    if (!user || !item) return false
+    return (
+      item.sellerId === user.uid ||
+      item.sellerId === 'anon' ||
+      (item.sellerName && (item.sellerName === profile?.displayName || item.sellerName === user?.email))
+    )
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!itemToDelete) return
+    setDeleteLoading(true)
+    try {
+      if (itemToDelete.id && !itemToDelete.id.startsWith('mock_')) {
+        await deleteDoc(doc(db, 'marketplace', itemToDelete.id))
+      }
+      setItems(prev => prev.filter(i => i.id !== itemToDelete.id))
+      if (selectedItem?.id === itemToDelete.id) {
+        setSelectedItem(null)
+      }
+      addToast('Item successfully removed from marketplace', 'success')
+      setItemToDelete(null)
+    } catch (err) {
+      console.error('Failed to delete item:', err)
+      addToast('Could not delete item: ' + err.message, 'error')
+    } finally {
+      setDeleteLoading(false)
+    }
+  }
 
   const [form, setForm] = useState({
     title: '',
@@ -85,9 +117,6 @@ export default function MarketplacePage({ setPage, setSelectedUser }) {
       }
     }
     loadData()
-
-    // initialize applied filters to current UI defaults
-    handleApplyFilters()
 
     return () => { isMounted = false }
   }, [])
@@ -446,6 +475,40 @@ export default function MarketplacePage({ setPage, setSelectedUser }) {
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       onError={e => { e.target.src = 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=800&q=80' }}
                     />
+
+                    {isItemOwner(item) && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setItemToDelete(item)
+                        }}
+                        style={{
+                          position: 'absolute',
+                          top: 10,
+                          left: 10,
+                          background: 'rgba(239, 68, 68, 0.92)',
+                          border: 'none',
+                          color: '#FFFFFF',
+                          borderRadius: 8,
+                          width: 32,
+                          height: 32,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          boxShadow: '0 2px 10px rgba(0,0,0,0.5)',
+                          zIndex: 5,
+                          transition: 'transform 0.15s ease',
+                        }}
+                        title="Delete listing"
+                        onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
+                        onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
+
                     <div style={{
                       position: 'absolute',
                       top: 10,
@@ -498,27 +561,54 @@ export default function MarketplacePage({ setPage, setSelectedUser }) {
                         </div>
                       </div>
 
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleChatSeller(item)
-                        }}
-                        style={{
-                          background: 'rgba(6, 182, 212, 0.15)',
-                          border: '1px solid rgba(6, 182, 212, 0.3)',
-                          color: colors.cyan,
-                          borderRadius: 8,
-                          padding: '6px 10px',
-                          fontSize: 11,
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 4,
-                        }}
-                      >
-                        <MessageSquare size={13} /> Chat
-                      </button>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        {isItemOwner(item) && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setItemToDelete(item)
+                            }}
+                            style={{
+                              background: 'rgba(239, 68, 68, 0.15)',
+                              border: '1px solid rgba(239, 68, 68, 0.35)',
+                              color: '#EF4444',
+                              borderRadius: 8,
+                              padding: '6px 10px',
+                              fontSize: 11,
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 4,
+                            }}
+                            title="Delete this listing"
+                          >
+                            <Trash2 size={13} /> Delete
+                          </button>
+                        )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleChatSeller(item)
+                          }}
+                          style={{
+                            background: 'rgba(6, 182, 212, 0.15)',
+                            border: '1px solid rgba(6, 182, 212, 0.3)',
+                            color: colors.cyan,
+                            borderRadius: 8,
+                            padding: '6px 10px',
+                            fontSize: 11,
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 4,
+                          }}
+                        >
+                          <MessageSquare size={13} /> Chat
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -553,7 +643,7 @@ export default function MarketplacePage({ setPage, setSelectedUser }) {
               {selectedItem.description}
             </p>
 
-            <div style={{ padding: 14, background: 'rgba(15, 23, 42, 0.8)', border: '1px solid rgba(6, 182, 212, 0.15)', borderRadius: 12, marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ padding: 14, background: 'rgba(15, 23, 42, 0.8)', border: '1px solid rgba(6, 182, 212, 0.15)', borderRadius: 12, marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <Avatar name={selectedItem.sellerName} size={38} />
                 <div>
@@ -564,13 +654,46 @@ export default function MarketplacePage({ setPage, setSelectedUser }) {
                 </div>
               </div>
 
-              <Btn onClick={() => handleChatSeller(selectedItem)} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <MessageSquare size={16} /> Chat Seller
-              </Btn>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                {isItemOwner(selectedItem) && (
+                  <button
+                    type="button"
+                    onClick={() => setItemToDelete(selectedItem)}
+                    style={{
+                      background: 'rgba(239, 68, 68, 0.15)',
+                      border: '1px solid rgba(239, 68, 68, 0.35)',
+                      color: '#EF4444',
+                      borderRadius: 10,
+                      padding: '10px 16px',
+                      fontSize: 13,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                    }}
+                  >
+                    <Trash2 size={16} /> Delete Offer
+                  </button>
+                )}
+                <Btn onClick={() => handleChatSeller(selectedItem)} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <MessageSquare size={16} /> Chat Seller
+                </Btn>
+              </div>
             </div>
           </div>
         </Modal>
       )}
+
+      {/* Confirmation Modal */}
+      <ConfirmDeleteModal
+        isOpen={Boolean(itemToDelete)}
+        onClose={() => setItemToDelete(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Marketplace Offer?"
+        message={`Are you sure you want to delete "${itemToDelete?.title}"? It will be permanently removed from the marketplace.`}
+        loading={deleteLoading}
+      />
 
       {/* List Item Modal */}
       {showCreateModal && (

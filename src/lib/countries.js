@@ -1,12 +1,15 @@
 import countries from 'i18n-iso-countries'
+import en from 'i18n-iso-countries/langs/en.json'
+import fr from 'i18n-iso-countries/langs/fr.json'
+import ar from 'i18n-iso-countries/langs/ar.json'
 
 // register common locales
 try {
-  countries.registerLocale(require('i18n-iso-countries/langs/en.json'))
-  countries.registerLocale(require('i18n-iso-countries/langs/fr.json'))
-  countries.registerLocale(require('i18n-iso-countries/langs/ar.json'))
-} catch (e) {
-  // in some environments require may not work; ignore
+  countries.registerLocale(en)
+  countries.registerLocale(fr)
+  countries.registerLocale(ar)
+} catch {
+  // in some environments locale registration may already exist; ignore
 }
 
 export function getCountryList(lang = 'en') {
