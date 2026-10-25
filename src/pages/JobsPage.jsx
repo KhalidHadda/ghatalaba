@@ -202,9 +202,9 @@ export default function JobsPage({ setPage }) {
         </div>
       </div>
 
-      {/* Search & Filter Controls */}
+      {/* Search & Filter Controls - Responsive: Clean layout for phone & desktop */}
       <div style={{
-        background: 'rgba(17, 28, 46, 0.7)',
+        background: 'rgba(17, 28, 46, 0.75)',
         border: '1px solid rgba(255, 255, 255, 0.08)',
         borderRadius: 16,
         padding: '1.25rem',
@@ -213,63 +213,77 @@ export default function JobsPage({ setPage }) {
         flexDirection: 'column',
         gap: 12,
       }}>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          {/* Search bar */}
-          <div style={{ flex: 1, minWidth: 220, position: 'relative' }}>
-            <Search size={16} color={colors.muted} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
-            <input
-              type="text"
-              placeholder={t('searchJobsPlaceholder')}
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              style={{
-                width: '100%',
-                background: 'rgba(6, 13, 25, 0.6)',
-                border: '1px solid rgba(6, 182, 212, 0.2)',
-                borderRadius: 10,
-                padding: '10px 12px 10px 38px',
-                color: colors.white,
-                fontSize: 14,
-                outline: 'none',
-              }}
-            />
-          </div>
+        {/* Search bar row */}
+        <div style={{ width: '100%', position: 'relative' }}>
+          <Search size={16} color={colors.muted} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
+          <input
+            type="text"
+            placeholder={t('searchJobsPlaceholder')}
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{
+              width: '100%',
+              boxSizing: 'border-box',
+              background: 'rgba(6, 13, 25, 0.6)',
+              border: '1px solid rgba(6, 182, 212, 0.2)',
+              borderRadius: 10,
+              padding: '11px 12px 11px 38px',
+              color: colors.white,
+              fontSize: 14,
+              outline: 'none',
+            }}
+          />
+        </div>
 
+        {/* Filter selectors row: Country + City + Job Type */}
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
           {/* Country + City Filter */}
-          <div style={{ display: 'flex', gap: 8 }}>
-            <div style={{ minWidth: 160 }}>
+          <div style={{ display: 'flex', gap: 8, flex: '2 1 240px', minWidth: 0 }}>
+            <div style={{ flex: '1 1 110px', minWidth: 0 }}>
               <CountrySelect value={selectedCountry} onChange={v => setSelectedCountry(v)} />
             </div>
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: '2 1 140px', minWidth: 0 }}>
               <CityPicker value={selectedCity === 'All' ? '' : selectedCity} onChange={v => setSelectedCity(v || 'All')} placeholder="City or start typing" countryCode={selectedCountry} lang={null} />
             </div>
           </div>
 
           {/* Job Type Filter */}
-          <select
-            value={selectedType}
-            onChange={e => setSelectedType(e.target.value)}
-            style={{
-              background: 'rgba(6, 13, 25, 0.6)',
-              border: '1px solid rgba(6, 182, 212, 0.2)',
-              borderRadius: 10,
-              padding: '10px 14px',
-              color: colors.white,
-              fontSize: 13,
-              outline: 'none',
-              cursor: 'pointer',
-            }}
-          >
-            {jobTypes.map(jt => (
-              <option key={jt} value={jt} style={{ background: '#0F1D33', color: '#FFF' }}>
-                ⏱️ {jt === 'All' ? t('allTypes') : jt}
-              </option>
-            ))}
-          </select>
+          <div style={{ flex: '1 1 160px', minWidth: 0 }}>
+            <select
+              value={selectedType}
+              onChange={e => setSelectedType(e.target.value)}
+              style={{
+                width: '100%',
+                background: 'rgba(6, 13, 25, 0.6)',
+                border: '1px solid rgba(6, 182, 212, 0.2)',
+                borderRadius: 10,
+                padding: '10px 14px',
+                color: colors.white,
+                fontSize: 13,
+                outline: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              {jobTypes.map(jt => (
+                <option key={jt} value={jt} style={{ background: '#0F1D33', color: '#FFF' }}>
+                  ⏱️ {jt === 'All' ? t('allTypes') : jt}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        {/* Categories Pills */}
-        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
+        {/* Categories Pills - Smooth Swipeable Rail on Mobile */}
+        <div 
+          className="no-scrollbar touch-scroll"
+          style={{
+            display: 'flex',
+            gap: 8,
+            overflowX: 'auto',
+            paddingBottom: 4,
+            WebkitOverflowScrolling: 'touch',
+          }}
+        >
           {categories.map(cat => (
             <button
               key={cat}
@@ -280,10 +294,11 @@ export default function JobsPage({ setPage }) {
                 color: selectedCategory === cat ? colors.cyan : colors.mutedLight,
                 fontSize: 12,
                 fontWeight: selectedCategory === cat ? 700 : 500,
-                padding: '6px 14px',
+                padding: '7px 16px',
                 borderRadius: 99,
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
+                flexShrink: 0,
                 transition: 'all 0.15s ease',
               }}
             >

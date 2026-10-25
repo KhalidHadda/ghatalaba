@@ -284,20 +284,20 @@ export default function MarketplacePage({ setPage, setSelectedUser }) {
           </div>
 
           {/* Search & Filters */}
+          {/* Search & Filters - Responsive without cramped boxes */}
           <div style={{
-            marginTop: '2rem',
-            background: 'rgba(17, 28, 46, 0.8)',
+            marginTop: '1.5rem',
+            background: 'rgba(17, 28, 46, 0.85)',
             backdropFilter: 'blur(12px)',
             border: '1px solid rgba(6, 182, 212, 0.2)',
             borderRadius: 16,
             padding: '1rem',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            display: 'flex',
+            flexDirection: 'column',
             gap: 12,
-            alignItems: 'center',
           }}>
-            {/* Search Input */}
-            <div style={{ position: 'relative' }}>
+            {/* Top Row: Search Input */}
+            <div style={{ position: 'relative', width: '100%' }}>
               <Search size={16} color={colors.muted} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
               <input
                 type="text"
@@ -307,7 +307,7 @@ export default function MarketplacePage({ setPage, setSelectedUser }) {
                 style={{
                   width: '100%',
                   boxSizing: 'border-box',
-                  padding: '9px 12px 9px 36px',
+                  padding: '10px 12px 10px 36px',
                   borderRadius: 10,
                   border: '1px solid rgba(255, 255, 255, 0.1)',
                   background: 'rgba(15, 23, 42, 0.6)',
@@ -318,67 +318,80 @@ export default function MarketplacePage({ setPage, setSelectedUser }) {
               />
             </div>
 
-            {/* Country + City Filter */}
-            <div style={{ display: 'flex', gap: 8 }}>
-              <div style={{ minWidth: 160 }}>
-                <CountrySelect value={selectedCountry} onChange={v => setSelectedCountry(v)} />
+            {/* Middle Row: Location & Condition Filters */}
+            <div style={{
+              display: 'flex',
+              gap: 10,
+              flexWrap: 'wrap',
+              alignItems: 'center',
+            }}>
+              {/* Country + City Filter */}
+              <div style={{ display: 'flex', gap: 8, flex: '2 1 240px', minWidth: 0 }}>
+                <div style={{ flex: '1 1 110px', minWidth: 0 }}>
+                  <CountrySelect value={selectedCountry} onChange={v => setSelectedCountry(v)} />
+                </div>
+                <div style={{ flex: '2 1 140px', minWidth: 0 }}>
+                  <CityPicker value={selectedCity === 'All' ? '' : selectedCity} onChange={v => setSelectedCity(v || 'All')} placeholder="City" countryCode={selectedCountry} lang={null} />
+                </div>
               </div>
-              <div style={{ flex: 1 }}>
-                <CityPicker value={selectedCity === 'All' ? '' : selectedCity} onChange={v => setSelectedCity(v || 'All')} placeholder="Search or type a city" countryCode={selectedCountry} lang={null} />
+
+              {/* Condition Filter */}
+              <div style={{ flex: '1 1 120px', minWidth: 0 }}>
+                <select
+                  value={selectedCondition}
+                  onChange={e => setSelectedCondition(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: 10,
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    background: 'rgba(15, 23, 42, 0.6)',
+                    color: '#FFFFFF',
+                    fontSize: 13,
+                    outline: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <option value="All" style={{ background: colors.navy }}>All Conditions</option>
+                  {CONDITIONS.map(cond => <option key={cond} value={cond} style={{ background: colors.navy }}>{cond}</option>)}
+                </select>
               </div>
-            </div>
 
-            {/* Condition Filter */}
-            <div>
-              <select
-                value={selectedCondition}
-                onChange={e => setSelectedCondition(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '9px 12px',
-                  borderRadius: 10,
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  background: 'rgba(15, 23, 42, 0.6)',
-                  color: '#FFFFFF',
-                  fontSize: 13,
-                  outline: 'none',
-                }}
-              >
-                <option value="All" style={{ background: colors.navy }}>All Conditions</option>
-                {CONDITIONS.map(cond => <option key={cond} value={cond} style={{ background: colors.navy }}>{cond}</option>)}
-              </select>
-            </div>
+              {/* Max Price / Budget Filter */}
+              <div style={{ flex: '1 1 120px', minWidth: 0 }}>
+                <input
+                  type="number"
+                  value={maxPrice}
+                  onChange={e => setMaxPrice(e.target.value)}
+                  placeholder="Max price (MAD)"
+                  style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(15,23,42,0.6)', color: '#fff', outline: 'none', fontSize: 13 }}
+                />
+              </div>
 
-            {/* Max Price / Budget Filter */}
-            <div>
-              <input
-                type="number"
-                value={maxPrice}
-                onChange={e => setMaxPrice(e.target.value)}
-                placeholder="Max price (MAD)"
-                style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(15,23,42,0.6)', color: '#fff', outline: 'none' }}
-              />
-            </div>
-
-            {/* Search / Apply Filters */}
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={handleApplyFilters} style={{ padding: '9px 12px', borderRadius: 10, background: 'linear-gradient(135deg,#00C896,#06B6D4)', border: 'none', color: '#061018', fontWeight: 700, cursor: 'pointer' }}>
-                {t ? t('searchBtn') : 'Search'}
-              </button>
-              <button onClick={() => { setSelectedCity('All'); setSelectedCondition('All'); setSelectedCategory('all'); setMaxPrice(''); setSearch(''); handleApplyFilters(); }} style={{ padding: '9px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', color: '#fff', cursor: 'pointer' }}>
-                {t ? t('resetBtn') : 'Reset'}
-              </button>
+              {/* Search / Apply Actions */}
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto' }}>
+                <button onClick={handleApplyFilters} style={{ padding: '10px 18px', borderRadius: 10, background: 'linear-gradient(135deg,#00C896,#06B6D4)', border: 'none', color: '#061018', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>
+                  {t ? t('searchBtn') : 'Search'}
+                </button>
+                <button onClick={() => { setSelectedCity('All'); setSelectedCondition('All'); setSelectedCategory('all'); setMaxPrice(''); setSearch(''); handleApplyFilters(); }} style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', cursor: 'pointer', fontSize: 13 }}>
+                  {t ? t('resetBtn') : 'Reset'}
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Category Tabs */}
-          <div style={{
-            display: 'flex',
-            gap: 8,
-            overflowX: 'auto',
-            paddingTop: '1rem',
-            scrollbarWidth: 'none',
-          }}>
+          {/* Category Tabs - Touch-Friendly Swipe Rail without crowded text */}
+          <div 
+            className="no-scrollbar touch-scroll"
+            style={{
+              display: 'flex',
+              gap: 8,
+              overflowX: 'auto',
+              paddingTop: '1rem',
+              paddingBottom: '4px',
+              WebkitOverflowScrolling: 'touch',
+            }}
+          >
             {CATEGORIES.map(cat => {
               const IconComp = cat.icon
               const isActive = selectedCategory === cat.id
@@ -396,10 +409,11 @@ export default function MarketplacePage({ setPage, setSelectedUser }) {
                     fontWeight: isActive ? 700 : 500,
                     cursor: 'pointer',
                     whiteSpace: 'nowrap',
+                    flexShrink: 0,
                     display: 'flex',
                     alignItems: 'center',
                     gap: 6,
-                    transition: 'all 0.2s ease',
+                    transition: 'all 0.15s ease',
                   }}
                 >
                   <IconComp size={15} color={isActive ? colors.cyan : colors.muted} />

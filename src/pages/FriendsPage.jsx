@@ -223,39 +223,40 @@ export default function FriendsPage({ setPage, setSelectedUser }) {
           </div>
         )}
 
-        {/* Quick Stats Cards */}
+        {/* Quick Stats Cards - Responsive: sleek 3-column on mobile, spacious cards on desktop */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: 12,
-          marginBottom: 20,
+          gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+          gap: 10,
+          marginBottom: 16,
         }}>
           <div style={{
             background: 'rgba(15, 23, 42, 0.8)',
             border: '1px solid rgba(6, 182, 212, 0.2)',
-            borderRadius: 14,
-            padding: '14px 18px',
+            borderRadius: 12,
+            padding: '10px 14px',
             display: 'flex',
             alignItems: 'center',
-            gap: 14,
+            gap: 10,
           }}>
             <div style={{
-              width: 42,
-              height: 42,
-              borderRadius: 12,
+              width: 36,
+              height: 36,
+              borderRadius: 10,
               background: 'rgba(0, 200, 150, 0.15)',
               border: '1px solid rgba(0, 200, 150, 0.3)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              flexShrink: 0,
             }}>
-              <Users size={22} color={colors.mint} />
+              <Users size={18} color={colors.mint} />
             </div>
-            <div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: colors.white, fontFamily: 'Space Grotesk, sans-serif' }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: colors.white, fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1.2 }}>
                 {friends.length}
               </div>
-              <div style={{ fontSize: 12, color: colors.muted }}>
+              <div style={{ fontSize: 11, color: colors.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 Total Friends
               </div>
             </div>
@@ -264,30 +265,31 @@ export default function FriendsPage({ setPage, setSelectedUser }) {
           <div style={{
             background: 'rgba(15, 23, 42, 0.8)',
             border: '1px solid rgba(6, 182, 212, 0.2)',
-            borderRadius: 14,
-            padding: '14px 18px',
+            borderRadius: 12,
+            padding: '10px 14px',
             display: 'flex',
             alignItems: 'center',
-            gap: 14,
+            gap: 10,
           }}>
             <div style={{
-              width: 42,
-              height: 42,
-              borderRadius: 12,
+              width: 36,
+              height: 36,
+              borderRadius: 10,
               background: 'rgba(6, 182, 212, 0.15)',
               border: '1px solid rgba(6, 182, 212, 0.3)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              flexShrink: 0,
             }}>
-              <div style={{ width: 14, height: 14, borderRadius: '50%', background: '#00C896', boxShadow: '0 0 10px #00C896' }} />
+              <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#00C896', boxShadow: '0 0 8px #00C896' }} />
             </div>
-            <div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: colors.white, fontFamily: 'Space Grotesk, sans-serif' }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: colors.white, fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1.2 }}>
                 {onlineCount}
               </div>
-              <div style={{ fontSize: 12, color: colors.muted }}>
-                Online Right Now
+              <div style={{ fontSize: 11, color: colors.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                Online Now
               </div>
             </div>
           </div>
@@ -295,29 +297,30 @@ export default function FriendsPage({ setPage, setSelectedUser }) {
           <div style={{
             background: 'rgba(15, 23, 42, 0.8)',
             border: '1px solid rgba(6, 182, 212, 0.2)',
-            borderRadius: 14,
-            padding: '14px 18px',
+            borderRadius: 12,
+            padding: '10px 14px',
             display: 'flex',
             alignItems: 'center',
-            gap: 14,
+            gap: 10,
           }}>
             <div style={{
-              width: 42,
-              height: 42,
-              borderRadius: 12,
+              width: 36,
+              height: 36,
+              borderRadius: 10,
               background: 'rgba(245, 158, 11, 0.15)',
               border: '1px solid rgba(245, 158, 11, 0.3)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              flexShrink: 0,
             }}>
-              <Sparkles size={20} color={colors.gold} />
+              <Sparkles size={18} color={colors.gold} />
             </div>
-            <div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: colors.white, fontFamily: 'Space Grotesk, sans-serif' }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: colors.white, fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1.2 }}>
                 {filteredSuggested.length}
               </div>
-              <div style={{ fontSize: 12, color: colors.muted }}>
+              <div style={{ fontSize: 11, color: colors.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 Peers to Connect
               </div>
             </div>
@@ -329,7 +332,7 @@ export default function FriendsPage({ setPage, setSelectedUser }) {
           background: colors.navyLight,
           border: '1px solid rgba(6, 182, 212, 0.2)',
           borderRadius: 16,
-          padding: '12px 16px',
+          padding: '12px 14px',
           marginBottom: 20,
           display: 'flex',
           flexDirection: 'column',
@@ -338,13 +341,20 @@ export default function FriendsPage({ setPage, setSelectedUser }) {
           {/* Top Row: Tabs & Search */}
           <div style={{
             display: 'flex',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 12,
+            flexDirection: 'column',
+            gap: 10,
           }}>
-            {/* Tabs */}
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {/* Tabs - Smooth Swipeable Row with zero crowded text */}
+            <div 
+              className="no-scrollbar touch-scroll"
+              style={{
+                display: 'flex',
+                gap: 8,
+                overflowX: 'auto',
+                paddingBottom: 4,
+                WebkitOverflowScrolling: 'touch',
+              }}
+            >
               <button
                 onClick={() => setActiveTab('all')}
                 style={{
@@ -352,13 +362,15 @@ export default function FriendsPage({ setPage, setSelectedUser }) {
                   border: activeTab === 'all' ? '1px solid rgba(0, 200, 150, 0.4)' : '1px solid rgba(255, 255, 255, 0.08)',
                   color: activeTab === 'all' ? colors.mint : colors.mutedLight,
                   borderRadius: 10,
-                  padding: '7px 14px',
+                  padding: '8px 14px',
                   fontSize: 13,
                   fontWeight: activeTab === 'all' ? 700 : 500,
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   gap: 6,
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
                 }}
               >
                 <Users size={15} /> All Friends ({friends.length})
@@ -371,13 +383,15 @@ export default function FriendsPage({ setPage, setSelectedUser }) {
                   border: activeTab === 'online' ? '1px solid rgba(0, 200, 150, 0.4)' : '1px solid rgba(255, 255, 255, 0.08)',
                   color: activeTab === 'online' ? colors.mint : colors.mutedLight,
                   borderRadius: 10,
-                  padding: '7px 14px',
+                  padding: '8px 14px',
                   fontSize: 13,
                   fontWeight: activeTab === 'online' ? 700 : 500,
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   gap: 6,
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
                 }}
               >
                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#00C896' }} />
@@ -391,13 +405,15 @@ export default function FriendsPage({ setPage, setSelectedUser }) {
                   border: activeTab === 'suggested' ? '1px solid rgba(6, 182, 212, 0.4)' : '1px solid rgba(255, 255, 255, 0.08)',
                   color: activeTab === 'suggested' ? colors.cyan : colors.mutedLight,
                   borderRadius: 10,
-                  padding: '7px 14px',
+                  padding: '8px 14px',
                   fontSize: 13,
                   fontWeight: activeTab === 'suggested' ? 700 : 500,
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   gap: 6,
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
                 }}
               >
                 <UserPlus size={15} /> Suggested Peers ({filteredSuggested.length})

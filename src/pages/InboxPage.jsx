@@ -345,8 +345,9 @@ export default function InboxPage({ setPage, initialPartner, onClearInitialPartn
             gap: 12,
             overflowX: 'auto',
             scrollbarWidth: 'none',
+            WebkitOverflowScrolling: 'touch',
             flexShrink: 0,
-          }}>
+          }} className="no-scrollbar touch-scroll">
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, color: colors.mint, textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>
               <Users size={14} /> Friends:
             </div>

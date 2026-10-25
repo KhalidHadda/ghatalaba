@@ -274,35 +274,36 @@ export default function RidesharePage({ setPage, setSelectedUser }) {
             </Btn>
           </div>
 
-          {/* Filter Bar */}
+          {/* Filter Bar - Responsive on Mobile */}
           <div style={{
-            marginTop: '2rem',
-            background: 'rgba(17, 28, 46, 0.8)',
+            marginTop: '1.5rem',
+            background: 'rgba(17, 28, 46, 0.85)',
             backdropFilter: 'blur(12px)',
             border: '1px solid rgba(6, 182, 212, 0.2)',
             borderRadius: 16,
-            padding: '1rem',
+            padding: '1.25rem',
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
             gap: 12,
+            alignItems: 'flex-end',
           }}>
             <div>
               <label style={{ fontSize: 11, fontWeight: 700, color: colors.mutedLight, display: 'block', marginBottom: 4 }}>FROM (Departure)</label>
-              <select value={originFilter} onChange={e => setOriginFilter(e.target.value)} style={{ width: '100%', padding: '9px 12px', borderRadius: 10, background: 'rgba(15, 23, 42, 0.7)', border: '1px solid rgba(255,255,255,0.1)', color: '#FFFFFF', fontSize: 13, outline: 'none' }}>
+              <select value={originFilter} onChange={e => setOriginFilter(e.target.value)} style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10, background: 'rgba(15, 23, 42, 0.7)', border: '1px solid rgba(255,255,255,0.1)', color: '#FFFFFF', fontSize: 13, outline: 'none' }}>
                 {CITIES.map(c => <option key={c} value={c} style={{ background: colors.navy }}>{c === 'All' ? 'All Departure Cities' : tCity(c)}</option>)}
               </select>
             </div>
 
             <div>
               <label style={{ fontSize: 11, fontWeight: 700, color: colors.mutedLight, display: 'block', marginBottom: 4 }}>TO (Destination)</label>
-              <select value={destFilter} onChange={e => setDestFilter(e.target.value)} style={{ width: '100%', padding: '9px 12px', borderRadius: 10, background: 'rgba(15, 23, 42, 0.7)', border: '1px solid rgba(255,255,255,0.1)', color: '#FFFFFF', fontSize: 13, outline: 'none' }}>
+              <select value={destFilter} onChange={e => setDestFilter(e.target.value)} style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10, background: 'rgba(15, 23, 42, 0.7)', border: '1px solid rgba(255,255,255,0.1)', color: '#FFFFFF', fontSize: 13, outline: 'none' }}>
                 {CITIES.map(c => <option key={c} value={c} style={{ background: colors.navy }}>{c === 'All' ? 'All Destinations' : tCity(c)}</option>)}
               </select>
             </div>
 
             <div>
               <label style={{ fontSize: 11, fontWeight: 700, color: colors.mutedLight, display: 'block', marginBottom: 4 }}>RIDE TYPE</label>
-              <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} style={{ width: '100%', padding: '9px 12px', borderRadius: 10, background: 'rgba(15, 23, 42, 0.7)', border: '1px solid rgba(255,255,255,0.1)', color: '#FFFFFF', fontSize: 13, outline: 'none' }}>
+              <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10, background: 'rgba(15, 23, 42, 0.7)', border: '1px solid rgba(255,255,255,0.1)', color: '#FFFFFF', fontSize: 13, outline: 'none' }}>
                 <option value="all" style={{ background: colors.navy }}>All Ride Types</option>
                 <option value="taxi_group" style={{ background: colors.navy }}>Grand Taxi Co-Ride Group</option>
                 <option value="carpool" style={{ background: colors.navy }}>Private Carpool</option>
@@ -310,12 +311,12 @@ export default function RidesharePage({ setPage, setSelectedUser }) {
             </div>
 
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <Btn onClick={() => applyRideFilters()} style={{ padding: '9px 14px' }}>
+              <button onClick={() => applyRideFilters()} style={{ flex: 1, padding: '10px 16px', borderRadius: 10, background: 'linear-gradient(135deg,#00C896,#06B6D4)', border: 'none', color: '#061018', fontWeight: 800, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                 <Search size={14} /> Search
-              </Btn>
-              <Btn variant="ghost" onClick={() => { setOriginFilter('All'); setDestFilter('All'); setTypeFilter('all'); applyRideFilters(); }}>
+              </button>
+              <button onClick={() => { setOriginFilter('All'); setDestFilter('All'); setTypeFilter('all'); applyRideFilters(); }} style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', cursor: 'pointer', fontSize: 13 }}>
                 Reset
-              </Btn>
+              </button>
             </div>
           </div>
         </div>

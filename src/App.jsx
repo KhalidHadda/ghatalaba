@@ -225,7 +225,7 @@ function AppContent() {
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
       {!hideNav && <Navbar page={activePage} setPage={navigate} />}
       {!hideNav && <EmailVerificationBanner />}
-      <main style={{ flex: 1 }}>
+      <main style={{ flex: 1 }} className="pb-16 md:pb-0">
         {pages[activePage] ?? pages.feed}
       </main>
     </div>

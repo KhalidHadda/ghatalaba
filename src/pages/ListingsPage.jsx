@@ -502,25 +502,45 @@ export default function ListingsPage({ setPage, setSelectedUser }) {
           }} />
         </div>
 
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 8, alignItems: 'center' }}>
-          <div style={{ minWidth: 220 }}>
+        {/* Location & Filter Controls - Responsive: no overflowing minWidths */}
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12, alignItems: 'center' }}>
+          <div style={{ flex: '1 1 140px', minWidth: 0 }}>
             <CountrySelect value={selectedCountry} onChange={v => setSelectedCountry(v)} />
           </div>
-          <div style={{ flex: 1, minWidth: 260 }}>
+          <div style={{ flex: '2 1 180px', minWidth: 0 }}>
             <CityPicker value={city === 'All' ? '' : city} onChange={v => setCity(v || 'All')} placeholder={t('selectCity') || 'Search or type a city'} countryCode={selectedCountry} lang={null} />
           </div>
           <div>
-            <button onClick={() => { setCity('All'); setSelectedCountry('MA'); }} style={{ padding: '6px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.04)', color: colors.muted, cursor: 'pointer' }}>Reset</button>
+            <button onClick={() => { setCity('All'); setSelectedCountry('MA'); }} style={{ padding: '9px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: colors.mutedLight, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>Reset</button>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 24 }}>
+        {/* Property Type Pills - Smooth swipeable rail on mobile with no-scrollbar */}
+        <div 
+          className="no-scrollbar touch-scroll"
+          style={{
+            display: 'flex',
+            gap: 8,
+            overflowX: 'auto',
+            flexWrap: 'nowrap',
+            paddingBottom: 8,
+            marginBottom: 20,
+            WebkitOverflowScrolling: 'touch',
+          }}
+        >
           {TYPES.map(t => (
             <button key={t} onClick={() => setType(t)} style={{
-              padding: '5px 14px', borderRadius: 99, fontSize: 12, cursor: 'pointer',
-              border: `0.5px solid ${type === t ? colors.gold : 'rgba(255,215,0,0.15)'}`,
-              background: type === t ? 'rgba(255,215,0,0.1)' : 'transparent',
-              color: type === t ? colors.gold : colors.muted, fontWeight: type === t ? 600 : 400,
+              padding: '7px 16px',
+              borderRadius: 99,
+              fontSize: 13,
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+              border: `0.5px solid ${type === t ? colors.gold : 'rgba(255,215,0,0.2)'}`,
+              background: type === t ? 'rgba(255,215,0,0.15)' : 'rgba(255,255,255,0.03)',
+              color: type === t ? colors.gold : colors.mutedLight,
+              fontWeight: type === t ? 700 : 500,
+              transition: 'all 0.15s ease',
             }}>{t}</button>
           ))}
         </div>

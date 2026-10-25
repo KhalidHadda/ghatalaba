@@ -433,11 +433,11 @@ export default function FeedPage({ setPage }) {
   }
 
   return (
-    <div style={{ background: colors.navy, minHeight: '100vh', padding: '1.5rem', color: colors.white }}>
+    <div style={{ background: colors.navy, minHeight: '100vh', padding: '1.25rem 1rem', color: colors.white }}>
       <div style={{ maxWidth: 680, margin: '0 auto' }}>
         
         {/* Title Header */}
-        <div style={{ marginBottom: 20 }}>
+        <div style={{ marginBottom: 18 }}>
           <h1 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: 26, margin: '0 0 4px', color: colors.white }}>
             {t('feedTitle')}
           </h1>

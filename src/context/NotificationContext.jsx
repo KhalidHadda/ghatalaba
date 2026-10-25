@@ -77,9 +77,20 @@ export function NotificationProvider({ children }) {
     setToasts(prev => prev.filter(t => t.id !== id))
   }, [])
 
-  const addToast = useCallback((toast) => {
+  const addToast = useCallback((toast, maybeType = 'info') => {
     const id = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
-    const newToast = { id, time: new Date(), ...toast }
+    let toastObj = {}
+    if (typeof toast === 'string') {
+      const typeTitle = maybeType === 'success' ? 'Success' : (maybeType === 'error' ? 'Notice' : 'Notification')
+      toastObj = {
+        title: typeTitle,
+        body: toast,
+        type: maybeType,
+      }
+    } else if (toast && typeof toast === 'object') {
+      toastObj = toast
+    }
+    const newToast = { id, time: new Date(), ...toastObj }
     setToasts(prev => [newToast, ...prev].slice(0, 5))
 
     // Auto dismiss toast after 5s
@@ -373,3 +384,5 @@ export function NotificationProvider({ children }) {
 export function useNotifications() {
   return useContext(NotificationContext)
 }
+
+export const useNotification = useNotifications

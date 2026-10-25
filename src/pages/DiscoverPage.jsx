@@ -480,30 +480,82 @@ export default function DiscoverPage({ setPage, setSelectedUser }) {
           </p>
         </div>
 
-        <div style={{ marginBottom: 16, position: 'relative', zIndex: 10, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          <Btn 
-            variant={showMap ? 'dark' : 'ghost'} 
+        {/* Action Buttons - Horizontal Swipe Rail on Mobile */}
+        <div 
+          className="no-scrollbar touch-scroll"
+          style={{
+            marginBottom: 16,
+            position: 'relative',
+            zIndex: 10,
+            display: 'flex',
+            gap: 8,
+            overflowX: 'auto',
+            paddingBottom: 4,
+            WebkitOverflowScrolling: 'touch',
+          }}
+        >
+          <button 
             onClick={() => setShowMap(!showMap)}
-            style={{ fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              padding: '8px 14px',
+              borderRadius: 10,
+              background: showMap ? 'rgba(0,200,150,0.2)' : 'rgba(255,255,255,0.05)',
+              border: `1px solid ${showMap ? 'rgba(0,200,150,0.4)' : 'rgba(255,255,255,0.1)'}`,
+              color: colors.white,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+              cursor: 'pointer',
+            }}
           >
-            <Map size={14} /> {showMap ? 'Close map' : 'Search by location'}
-          </Btn>
+            <Map size={14} color={colors.mint} /> {showMap ? 'Close map' : 'Search by location'}
+          </button>
 
-          <Btn 
-            variant="ghost" 
+          <button 
             onClick={() => user ? setShowUniModal(true) : setPage('signup')}
-            style={{ fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 6, color: colors.gold, borderColor: 'rgba(255,215,0,0.3)' }}
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              padding: '8px 14px',
+              borderRadius: 10,
+              background: 'rgba(255,215,0,0.06)',
+              border: '1px solid rgba(255,215,0,0.3)',
+              color: colors.gold,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+              cursor: 'pointer',
+            }}
           >
             <GraduationCap size={15} color={colors.gold} /> Rate & Review Universities
-          </Btn>
+          </button>
 
-          <Btn
-            variant="ghost"
+          <button
             onClick={() => user ? setShowPrefModal(true) : setPage('login')}
-            style={{ fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 6, color: colors.mint, borderColor: 'rgba(0,200,150,0.3)' }}
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              padding: '8px 14px',
+              borderRadius: 10,
+              background: 'rgba(0,200,150,0.08)',
+              border: '1px solid rgba(0,200,150,0.3)',
+              color: colors.mint,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+              cursor: 'pointer',
+            }}
           >
             <Sliders size={14} /> {t('myPreferences')}
-          </Btn>
+          </button>
         </div>
 
         {showMap && (
@@ -541,7 +593,7 @@ export default function DiscoverPage({ setPage, setSelectedUser }) {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10 }}>
             <div>
               <label style={{ fontSize: 11, color: colors.muted, display: 'block', marginBottom: 4 }}>University</label>
               <select value={uni} onChange={e => setUni(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: 8, background: 'rgba(255,255,255,0.05)', border: '0.5px solid rgba(0,200,150,0.2)', color: colors.white, outline: 'none', fontSize: 12 }}>

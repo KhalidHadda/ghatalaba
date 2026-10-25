@@ -177,35 +177,48 @@ export default function EventsPage({ setPage }) {
           </Btn>
         </div>
 
-        {/* Filters */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-            <div style={{ minWidth: 160 }}>
+        {/* Filters - Responsive layout for mobile & desktop */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+            <div style={{ flex: '1 1 120px', minWidth: 0 }}>
               <CountrySelect value={selectedCountry} onChange={v => setSelectedCountry(v)} />
             </div>
-            <div style={{ flex: 1, minWidth: 220 }}>
+            <div style={{ flex: '2 1 160px', minWidth: 0 }}>
               <CityPicker value={selectedCity === 'All' ? '' : selectedCity} onChange={v => setSelectedCity(v || 'All')} placeholder={t('selectCity') || 'Search or type a city'} countryCode={selectedCountry} lang={null} />
             </div>
             <div>
-              <button onClick={() => { setSelectedCity('All'); setSelectedCountry('MA') }} style={{ padding: '6px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.04)', color: colors.mutedLight, cursor: 'pointer' }}>Reset</button>
+              <button onClick={() => { setSelectedCity('All'); setSelectedCountry('MA') }} style={{ padding: '9px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: colors.mutedLight, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>Reset</button>
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {/* Categories Pills - Smooth Swipeable Rail on Mobile */}
+          <div 
+            className="no-scrollbar touch-scroll"
+            style={{
+              display: 'flex',
+              gap: 8,
+              overflowX: 'auto',
+              flexWrap: 'nowrap',
+              paddingBottom: 4,
+              WebkitOverflowScrolling: 'touch',
+            }}
+          >
             {CATEGORIES.map(cat => (
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
                 style={{
-                  padding: '4px 10px',
-                  borderRadius: 8,
-                  fontSize: 11,
+                  padding: '7px 15px',
+                  borderRadius: 99,
+                  fontSize: 12,
                   whiteSpace: 'nowrap',
+                  flexShrink: 0,
                   cursor: 'pointer',
-                  border: `0.5px solid ${selectedCategory === cat ? colors.gold : 'rgba(255,215,0,0.15)'}`,
-                  background: selectedCategory === cat ? 'rgba(255,215,0,0.12)' : 'transparent',
-                  color: selectedCategory === cat ? colors.gold : colors.muted,
-                  fontWeight: selectedCategory === cat ? 600 : 400,
+                  border: `0.5px solid ${selectedCategory === cat ? colors.gold : 'rgba(255,215,0,0.18)'}`,
+                  background: selectedCategory === cat ? 'rgba(255,215,0,0.14)' : 'rgba(255,255,255,0.03)',
+                  color: selectedCategory === cat ? colors.gold : colors.mutedLight,
+                  fontWeight: selectedCategory === cat ? 700 : 500,
+                  transition: 'all 0.15s ease',
                 }}
               >
                 {cat === 'All' ? t('allCategories') : cat}
